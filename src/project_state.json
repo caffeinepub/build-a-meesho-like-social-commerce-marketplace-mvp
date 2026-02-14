@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 7,
+  "summary": "Plan to build a Meesho-like e-commerce marketplace website.",
+  "architectural_notes": [
+    "Admin access is controlled per-user (Internet Identity principal) and gates visibility/access to Product Management (/admin)."
+  ],
+  "known_issues": [
+    "Attempt to set the user's account as admin failed due to a build/deploy error ('AI was unable to complete your request')."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-create-a-responsive-marketplace-storefront-with-key-shopping-flows-inspired-by-meesho-browse-categories-view-product-grid-open-product-details-add-remove-items-in-cart-and-place-an-order-no-external-payment-integration",
+      "title": "Create a responsive marketplace storefront with key shopping flows inspired by Meesho: browse categories, view product grid, open product details, add/remove items in cart, and place an order (no external payment integration).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-internet-identity-sign-in-and-show-authenticated-user-state-signed-in-out-across-the-app-require-sign-in-before-placing-an-order",
+      "title": "Add Internet Identity sign-in and show authenticated user state (signed in/out) across the app; require sign-in before placing an order.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-simple-seller-admin-product-management-ui-for-adding-and-editing-products-title-description-price-category-image-url-to-enable-marketplace-content-without-external-services",
+      "title": "Add a simple seller/admin product management UI for adding and editing products (title, description, price, category, image URL) to enable marketplace content without external services.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-coherent-visual-theme-for-a-meesho-like-budget-fashion-marketplace-warm-bright-palette-avoid-blue-purple-bold-headings-high-contrast-ctas-and-mobile-first-layout-with-a-sticky-bottom-cart-shortcut-on-small-screens",
+      "title": "Apply a coherent visual theme for a Meesho-like budget fashion marketplace: warm, bright palette (avoid blue/purple), bold headings, high-contrast CTAs, and mobile-first layout with a sticky bottom cart shortcut on small screens.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-generated-static-brand-assets-and-use-them-in-the-ui-logo-and-a-homepage-hero-illustration-from-frontend-public-assets-generated-no-backend-image-serving",
+      "title": "Add generated static brand assets and use them in the UI (logo and a homepage hero illustration) from frontend/public/assets/generated (no backend image serving).",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clear-user-facing-explanation-of-how-to-add-products-including-where-to-find-the-product-management-screen-and-what-information-is-required-title-description-price-category-image-url",
+      "title": "Add a clear, user-facing explanation of how to add products, including where to find the Product Management screen and what information is required (title, description, price, category, image URL).",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-product-management-area-easy-to-find-on-all-screen-sizes-by-exposing-an-admin-product-management-navigation-entry-in-the-authenticated-account-menu-only-show-this-entry-when-the-current-user-is-an-admin",
+      "title": "Make the Product Management area easy to find on all screen sizes by exposing an Admin/Product Management navigation entry in the authenticated account menu; only show this entry when the current user is an admin.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-handle-non-admin-access-to-the-admin-page-with-a-friendly-english-message-explaining-that-adding-editing-products-is-restricted-to-admins-and-that-the-user-must-have-admin-permissions-to-use-product-management",
+      "title": "Handle non-admin access to the /admin page with a friendly, English message explaining that adding/editing products is restricted to admins and that the user must have admin permissions to use Product Management.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-frontend-ui-path-for-a-signed-in-non-admin-user-to-trigger-the-admin-bootstrap-action-and-receive-clear-feedback-this-must-be-accessible-from-the-existing-non-admin-experience-e-g-on-the-admin-access-restricted-page-and-or-account-menu-and-must-display-all-user-facing-text-in-english",
+      "title": "Add a frontend UI path for a signed-in non-admin user to trigger the admin bootstrap action and receive clear feedback. This must be accessible from the existing non-admin experience (e.g., on the /admin access-restricted page and/or account menu) and must display all user-facing text in English.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-frontend-refreshes-cached-auth-role-state-immediately-after-the-admin-bootstrap-action-completes-so-admin-gated-ui-updates-correctly-e-g-invalidate-refetch-the-current-user-role-query-and-any-other-dependent-queries",
+      "title": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes so admin-gated UI updates correctly (e.g., invalidate/refetch the current user role query and any other dependent queries).",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Create a Meesho-like e-commerce marketplace website.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement backend marketplace data model and APIs in the single Motoko actor: products, categories, carts, and orders, including stable persistence for deployed canister upgrades.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Seed the app with initial sample categories and products on first deployment, so the storefront is usable without manual setup.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Provide a way to mark a specific Internet Identity user as an admin so they can access Product Management and add products.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Add a backend method that lets the currently authenticated caller become an admin when (and only when) no admin has been set up yet (admin bootstrap). The method must grant the caller admin privileges in the existing access control system and return a clear success/failure result (or trap with a clear English error message).",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Build a Meesho-like social commerce marketplace MVP",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

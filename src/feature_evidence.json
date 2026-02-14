@@ -1,0 +1,47 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-a-frontend-ui-path-for-a-signed-in-non-admin-user-to-trigger-the-admin-bootstrap-action-and-receive-clear-feedback-this-must-be-accessible-from-the-existing-non-admin-experience-e-g-on-the-admin-access-restricted-page-and-or-account-menu-and-must-display-all-user-facing-text-in-english",
+      "featureTitle": "Add a frontend UI path for a signed-in non-admin user to trigger the admin bootstrap action and receive clear feedback. This must be accessible from the existing non-admin experience (e.g., on the /admin access-restricted page and/or account menu) and must display all user-facing text in English.",
+      "files": [
+        "frontend/src/components/auth/AuthControls.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminSellerPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-12"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-frontend-refreshes-cached-auth-role-state-immediately-after-the-admin-bootstrap-action-completes-so-admin-gated-ui-updates-correctly-e-g-invalidate-refetch-the-current-user-role-query-and-any-other-dependent-queries",
+      "featureTitle": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes so admin-gated UI updates correctly (e.g., invalidate/refetch the current user role query and any other dependent queries).",
+      "files": [
+        "frontend/src/hooks/useCurrentUser.ts",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminSellerPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-13"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

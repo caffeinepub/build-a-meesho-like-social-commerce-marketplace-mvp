@@ -1,0 +1,74 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-13T18:09:01.840Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-11",
+        "summary": "Add a backend method that lets the currently authenticated caller become an admin when (and only when) no admin has been set up yet (admin bootstrap). The method must grant the caller admin privileges in the existing access control system and return a clear success/failure result (or trap with a clear English error message).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-12",
+        "summary": "Add a frontend UI path for a signed-in non-admin user to trigger the admin bootstrap action and receive clear feedback. This must be accessible from the existing non-admin experience (e.g., on the /admin access-restricted page and/or account menu) and must display all user-facing text in English.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminSellerPage.tsx",
+          "frontend/src/components/auth/AuthControls.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminSellerPage.tsx",
+          "frontend/src/components/auth/AuthControls.tsx"
+        ]
+      },
+      {
+        "id": "REQ-13",
+        "summary": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes so admin-gated UI updates correctly (e.g., invalidate/refetch the current user role query and any other dependent queries).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/hooks/useCurrentUser.ts",
+          "frontend/src/pages/AdminSellerPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/hooks/useCurrentUser.ts",
+          "frontend/src/pages/AdminSellerPage.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/auth/AuthControls.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useCurrentUser.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminSellerPage.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

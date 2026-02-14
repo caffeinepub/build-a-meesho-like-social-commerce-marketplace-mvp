@@ -1,0 +1,80 @@
+{
+  "kind": "build_request",
+  "title": "Enable self-service admin bootstrap so the signed-in user can access Product Management",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-11",
+      "text": "Add a backend method that lets the currently authenticated caller become an admin when (and only when) no admin has been set up yet (admin bootstrap). The method must grant the caller admin privileges in the existing access control system and return a clear success/failure result (or trap with a clear English error message).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "recent-12",
+          "recent-10"
+        ],
+        "quotes": [
+          "yes",
+          "MAKE MY ACCOUNT ADMIN"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When no admin exists yet, an authenticated user can call the new method and becomes an admin successfully.",
+        "When at least one admin already exists, calling the method fails with a clear English error explaining that an admin already exists and the user must be granted admin by an existing admin.",
+        "After successful promotion, existing admin checks (e.g., isCallerAdmin) return true for that caller.",
+        "The canister builds and deploys successfully (no Motoko compile errors)."
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Add a frontend UI path for a signed-in non-admin user to trigger the admin bootstrap action and receive clear feedback. This must be accessible from the existing non-admin experience (e.g., on the /admin access-restricted page and/or account menu) and must display all user-facing text in English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-12",
+          "recent-10"
+        ],
+        "quotes": [
+          "yes",
+          "MAKE MY ACCOUNT ADMIN"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A signed-in non-admin user can see a button/CTA to become admin (only shown when they are not admin).",
+        "Clicking the CTA calls the backend admin bootstrap method and shows a success toast/message on success.",
+        "On failure (e.g., admin already exists), the UI shows the backend’s error message in a user-friendly way.",
+        "After success, the UI updates without a full page refresh and the Product Management entry becomes visible in the authenticated account menu."
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes so admin-gated UI updates correctly (e.g., invalidate/refetch the current user role query and any other dependent queries).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-12"
+        ],
+        "quotes": [
+          "yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After the admin bootstrap succeeds, the app updates the user’s admin status in the UI within the same session.",
+        "Admin-only navigation and the /admin page become accessible immediately after the role refresh."
+      ]
+    }
+  ],
+  "constraints": [
+    "Respect the single-actor backend architecture: all Motoko logic stays in backend/main.mo.",
+    "Do not edit any frontend files under frontend/src/components/ui or any path listed in frontend.immutablePaths (compose them instead).",
+    "Use English for all user-facing text."
+  ],
+  "nonGoals": [
+    "Implementing third-party authentication (only Internet Identity is supported).",
+    "Building a full admin invitation/approval workflow or multi-role permission management UI beyond the one-time admin bootstrap.",
+    "Adding any external database or backend service."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

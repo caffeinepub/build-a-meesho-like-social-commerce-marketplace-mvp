@@ -1,2 +1,3 @@
-# build-a-meesho-like-social-commerce-marketplace-mvp
-Exported from Caffeine project: Build a Meesho-like social commerce marketplace MVP
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

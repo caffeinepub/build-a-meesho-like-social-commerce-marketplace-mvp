@@ -1,0 +1,64 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Self-service admin bootstrap UI and immediate role refresh",
+  "requirements": [
+    {
+      "id": "REQ-12",
+      "summary": "Provide a signed-in non-admin UI path to trigger one-time admin bootstrap and show clear English success/failure feedback",
+      "acceptanceCriteria": [
+        "A signed-in non-admin user can see a button/CTA to become admin (only shown when they are not admin).",
+        "Clicking the CTA calls the backend admin bootstrap method and shows a success toast/message on success.",
+        "On failure (e.g., admin already exists), the UI shows the backend’s error message in a user-friendly way.",
+        "After success, the UI updates without a full page refresh and the Product Management entry becomes visible in the authenticated account menu."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Extend the typed backend interface to include the new self-service admin bootstrap backend function (as implemented in the backend) so the frontend can call it safely. Ensure the signature matches the backend capability exactly."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a React Query mutation hook for calling the new self-service admin bootstrap backend function and for surfacing errors to the UI. Use the authorization component’s role-based access control assumptions (caller identity + role checks) to keep behavior consistent; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminSellerPage.tsx",
+          "operation": "modify",
+          "description": "Update the existing non-admin access-restricted /admin experience to include an English CTA (e.g., “Make my account an admin”) that is only shown to signed-in non-admin users, calls the new bootstrap mutation, and shows success/error feedback via toast/message. Use the authorization component’s admin gating model (isAdmin) to decide which UI to show; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/auth/AuthControls.tsx",
+          "operation": "modify",
+          "description": "Add a non-admin-only dropdown menu item that navigates the signed-in user to /admin to access the bootstrap CTA, while keeping the existing admin-only “Product Management” entry for admins. Use the authorization component’s role-derived UI gating (isAdmin) for conditional visibility; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "summary": "Invalidate/refetch cached role state immediately after bootstrap so admin-gated UI updates in-session",
+      "acceptanceCriteria": [
+        "After the admin bootstrap succeeds, the app updates the user’s admin status in the UI within the same session.",
+        "Admin-only navigation and the /admin page become accessible immediately after the role refresh."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "On successful completion of the admin bootstrap mutation, immediately invalidate/refetch role-derived queries (at minimum the ['currentUserRole'] query used by useCurrentUser) so admin-gated UI updates without a full refresh. Use the authorization component guidance for clearing/refreshing cached auth-related data when privilege changes; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useCurrentUser.ts",
+          "operation": "modify",
+          "description": "Ensure the current-user role query is keyed consistently (and, if helpful, centralize/export the role query key) so it can be reliably invalidated after bootstrap and so dependent UI (header/admin menu/admin page gating) re-renders promptly. Use the authorization component’s role-check pattern (isCallerAdmin) consistently; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminSellerPage.tsx",
+          "operation": "modify",
+          "description": "After a successful bootstrap action, ensure the /admin view transitions from the non-admin message to the Product Management UI within the same session by relying on the refreshed role state (no full page reload). Use the authorization component’s role-based gating behavior for this transition; verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

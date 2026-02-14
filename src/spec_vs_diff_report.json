@@ -1,0 +1,53 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-13T18:09:01.838Z",
+  "summary": "Frontend adds non-admin \"Become Admin\" entry and a bootstrap CTA on /admin with toast feedback, plus a role query hook. However, the diff summary does not provide evidence that the required backend admin-bootstrap method exists, nor that the frontend actually refreshes role state via query invalidation after bootstrap (the relevant mutation code is truncated). Also includes unrequested migration scaffolding and token parameters.",
+  "missing_requirements": [
+    {
+      "id": "REQ-11",
+      "requirement": "Add a backend method that lets the currently authenticated caller become an admin only when no admin exists yet, updating the existing access control system and returning a clear success/failure (or trapping with a clear English message).",
+      "reason": "The backend diff excerpt shows a new `adminBootstrapped` variable and migration wiring, but no new public/shared method implementing the described bootstrap behavior is visible in the provided `backend/main.mo` excerpt. Because the file is truncated, this cannot be confirmed from the diff summary.",
+      "evidence": [
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "requirement": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes (invalidate/refetch role query and dependent queries).",
+      "reason": "The diff shows a role query key exported in `useCurrentUser`, but the actual `useBootstrapAdmin` mutation implementation (where invalidation/refetch should occur) is not visible in the truncated `useQueries.ts`, so immediate cache refresh cannot be verified from the provided diff summary.",
+      "evidence": [
+        "frontend/src/hooks/useCurrentUser.ts",
+        "frontend/src/hooks/useQueries.ts (truncated)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added migration scaffolding and integrated migration runner into the backend actor.",
+      "reason": "The BuildRequest does not mention adding migrations; it only constrains Motoko logic to remain in `backend/main.mo` and focuses on admin bootstrap behavior.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo (with migration = Migration.run)"
+      ]
+    },
+    {
+      "description": "Bootstrap flow appears to involve `adminToken` and `userProvidedToken` parameters.",
+      "reason": "The BuildRequest specifies a self-service bootstrap when and only when no admin exists, but does not request any token-based bootstrap inputs.",
+      "evidence": [
+        "frontend/src/pages/AdminSellerPage.tsx (calls mutateAsync({ adminToken: '', userProvidedToken: '' }))"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/auth/AuthControls.tsx",
+    "frontend/src/hooks/useCurrentUser.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminSellerPage.tsx",
+    "project_state.json"
+  ]
+}
