@@ -24,7 +24,9 @@ export type OrderStatus = { 'shipped' : null } |
   { 'canceled' : null } |
   { 'pending' : null } |
   { 'paid' : null } |
-  { 'delivered' : null };
+  { 'delivered' : null } |
+  { 'accepted' : null } |
+  { 'declined' : null };
 export interface Product {
   'id' : bigint,
   'title' : string,
@@ -59,6 +61,7 @@ export interface _SERVICE {
     undefined
   >,
   'getAllCategories' : ActorMethod<[], Array<Category>>,
+  'getAllOrders' : ActorMethod<[], Array<Order>>,
   'getAllProductsSortedById' : ActorMethod<[], Array<Product>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -70,6 +73,7 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'updateOrderStatus' : ActorMethod<[bigint, OrderStatus], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

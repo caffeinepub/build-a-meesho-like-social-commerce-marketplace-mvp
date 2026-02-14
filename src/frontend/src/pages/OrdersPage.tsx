@@ -11,10 +11,12 @@ export default function OrdersPage() {
 
   const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
     switch (status) {
+      case 'accepted':
       case 'delivered':
         return 'default';
       case 'shipped':
         return 'secondary';
+      case 'declined':
       case 'canceled':
         return 'destructive';
       default:

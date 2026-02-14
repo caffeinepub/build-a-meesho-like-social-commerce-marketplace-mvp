@@ -1,11 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 15,
   "summary": "Plan to build a Meesho-like e-commerce marketplace website.",
   "architectural_notes": [
     "Admin access is controlled per-user (Internet Identity principal) and gates visibility/access to Product Management (/admin).",
     "Add a user-facing Profile/Account area that can display the current authenticated Internet Identity principal and admin status for support/debugging (since admin access is principal-based and the UI currently doesn’t surface it).",
-    "Checkout should capture and persist a shipping address (name, mobile, pincode, address lines, landmark, city, state) for order placement and display it in the order summary."
+    "Checkout should capture and persist a shipping address (name, mobile, pincode, address lines, landmark, city, state) for order placement and display it in the order summary.",
+    "Real payment gateway integrations (e.g., Razorpay/Paytm/PhonePe/Stripe/UPI) are not supported on the current platform; checkout payments must remain demo-only (e.g., COD/UPI demo) with a more realistic UI as needed.",
+    "Introduce order status states to support seller decisioning (e.g., Pending Seller Confirmation -> Accepted/Declined) and expose this in a seller-facing UI."
   ],
   "known_issues": [
     "Attempt to set the user's account as admin failed due to a build/deploy error ('AI was unable to complete your request').",
@@ -165,6 +167,70 @@
         "REQ-23"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-upgrade-the-step-3-payment-ui-on-the-existing-checkout-page-to-look-more-realistic-while-remaining-strictly-a-demo-no-real-payment-gateway-keep-the-existing-3-step-checkout-flow-and-the-existing-checkout-mutation-that-places-the-order",
+      "title": "Upgrade the Step 3 (Payment) UI on the existing Checkout page to look more realistic while remaining strictly a demo (no real payment gateway). Keep the existing 3-step checkout flow and the existing checkout mutation that places the order.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-realistic-demo-payment-method-flows-in-checkout-step-3-keep-cash-on-delivery-and-enhance-digital-payments-by-showing-method-specific-input-panels-e-g-upi-id-for-upi-cardholder-name-card-number-expiry-cvv-for-card-with-basic-client-side-validation-and-helpful-inline-error-messages",
+      "title": "Add realistic demo payment method flows in Checkout Step 3: keep Cash on Delivery, and enhance digital payments by showing method-specific input panels (e.g., UPI ID for UPI, cardholder name/card number/expiry/CVV for card) with basic client-side validation and helpful inline error messages.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-simulate-a-realistic-payment-processing-experience-during-demo-payment-when-the-user-clicks-the-final-pay-action-show-a-processing-state-e-g-modal-or-inline-status-for-a-short-duration-before-placing-the-order-and-prevent-duplicate-submissions-while-processing",
+      "title": "Simulate a realistic payment processing experience during demo payment: when the user clicks the final pay action, show a processing state (e.g., modal or inline status) for a short duration before placing the order, and prevent duplicate submissions while processing.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-display-a-demo-payment-reference-transaction-id-for-non-cod-demo-methods-and-show-it-on-the-order-confirmation-page-after-a-successful-order-placement-frontend-only-persistence-is-acceptable",
+      "title": "Generate and display a demo payment reference/transaction ID for non-COD demo methods and show it on the Order Confirmation page after a successful order placement (frontend-only persistence is acceptable).",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clear-non-intrusive-disclaimer-in-checkout-step-3-that-the-payment-experience-is-a-demo-and-no-real-money-is-being-processed-without-reducing-the-realistic-look-and-feel",
+      "title": "Add a clear, non-intrusive disclaimer in Checkout Step 3 that the payment experience is a demo and no real money is being processed, without reducing the realistic look and feel.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-for-seller-admin-order-management-that-integrate-with-the-new-backend-apis-frontend-changes-must-add-a-query-hook-to-fetch-all-orders-for-the-current-authenticated-admin-add-mutation-hook-s-to-accept-an-order-and-to-decline-an-order-or-a-single-mutation-that-updates-status-ensure-relevant-caches-are-refreshed-after-mutations-e-g-invalidate-refetch-both-the-admin-orders-list-and-the-buyer-orders-query-key-orders-when-applicable",
+      "title": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-seller-admin-order-review-ui-that-allows-accepting-or-declining-newly-placed-orders-frontend-changes-must-add-an-order-management-section-within-the-existing-admin-experience-adminsellerpage-that-is-visible-only-to-admins-display-a-list-of-orders-with-key-details-order-id-buyer-principal-or-a-safe-identifier-item-count-total-inr-formatting-delivery-address-summary-if-present-current-status-for-orders-in-pending-status-show-accept-and-decline-actions-after-an-action-completes-show-clear-english-success-error-feedback-and-disable-prevent-duplicate-submissions-while-the-mutation-is-pending",
+      "title": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-buyer-facing-order-status-display-to-handle-the-new-accepted-declined-statuses-consistently-frontend-changes-must-update-orders-orderspage-status-badge-styling-variants-to-include-the-new-statuses-ensure-the-status-label-shown-to-the-user-is-clear-and-consistent-e-g-accepted-declined",
+      "title": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -239,6 +305,26 @@
       "summary": "Extend the backend order model and checkout API to persist the delivery address with each order created from the new checkout flow.",
       "reqIds": [
         "REQ-21"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Make the demo payment step UI more realistic (e.g., more payment choices and a more lifelike payment screen) while still not integrating any real payment gateway.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-19",
+      "summary": "Add a seller/admin order management workflow so sellers can review newly placed orders and accept or decline them (update order status accordingly and reflect it in the buyer’s order view).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Extend the backend order lifecycle to support seller decisions by adding explicit order statuses for “accepted” and “declined”, and expose admin-only APIs to list all orders and to accept/decline an order.\n\nBackend changes must:\n- Update `OrderStatus` in `backend/main.mo` to include variants for accepted and declined.\n- Keep the existing `checkout(...)` behavior creating new orders with status `#pending`.\n- Add a query method that returns a list of all orders for admins only (seller/admin order inbox).\n- Add an admin-only update method that lets an admin change an order’s status from `pending` to either `accepted` or `declined`, with clear English error messages when the order does not exist, the caller is not an admin, or the transition is invalid.",
+      "reqIds": [
+        "REQ-29"
       ],
       "status": "pending"
     }

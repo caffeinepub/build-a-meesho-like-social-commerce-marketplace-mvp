@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Product, Category, Order, UserProfile } from '@/backend';
+import type { Product, Category, Order, UserProfile, OrderStatus } from '@/backend';
 
 // Products
 export function useGetProducts(category: string | null) {
@@ -130,6 +130,38 @@ export function useGetOrders() {
       return actor.getOrders();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+// Admin Orders - fetch all orders for admin/seller
+export function useGetAllOrders() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Order[]>({
+    queryKey: ['adminOrders'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllOrders();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Update order status (admin only)
+export function useUpdateOrderStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { orderId: bigint; newStatus: OrderStatus }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateOrderStatus(data.orderId, data.newStatus);
+    },
+    onSuccess: () => {
+      // Invalidate both admin orders and buyer orders to refresh all views
+      queryClient.invalidateQueries({ queryKey: ['adminOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
   });
 }
 

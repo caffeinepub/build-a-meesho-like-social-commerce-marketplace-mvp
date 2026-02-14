@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useGetProducts, useAddProduct, useEditProduct, useDeleteProduct, useBootstrapAdmin } from '@/hooks/useQueries';
+import { useGetProducts, useAddProduct, useEditProduct, useDeleteProduct, useBootstrapAdmin, useGetAllOrders, useUpdateOrderStatus } from '@/hooks/useQueries';
 import RequireAuth from '@/components/auth/RequireAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Pencil, Trash2, Plus, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Pencil, Trash2, Plus, ShieldAlert, ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Product } from '@/backend';
+import type { Product, Order, OrderStatus } from '@/backend';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import AdminProductManagementHelp from '@/components/admin/AdminProductManagementHelp';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { formatINR } from '@/utils/currency';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AdminSellerPage() {
   return (
@@ -98,50 +101,218 @@ function AdminContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Product Management</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAdd} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
-              </DialogTitle>
-            </DialogHeader>
-            <ProductForm
-              product={editingProduct}
-              onSuccess={() => {
-                setIsDialogOpen(false);
-                setEditingProduct(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-      <AdminProductManagementHelp />
+      <Tabs defaultValue="products" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="products">Product Management</TabsTrigger>
+          <TabsTrigger value="orders">Order Management</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="products" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">Products</h2>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleAdd} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Product
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  </DialogTitle>
+                </DialogHeader>
+                <ProductForm
+                  product={editingProduct}
+                  onSuccess={() => {
+                    setIsDialogOpen(false);
+                    setEditingProduct(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <AdminProductManagementHelp />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {productsLoading ? (
+                <p>Loading products...</p>
+              ) : (
+                <ProductTable
+                  products={products || []}
+                  onEdit={handleEdit}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="orders">
+          <OrderManagement />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function OrderManagement() {
+  const { data: orders, isLoading } = useGetAllOrders();
+  const updateOrderStatus = useUpdateOrderStatus();
+
+  const handleAccept = async (orderId: bigint) => {
+    try {
+      await updateOrderStatus.mutateAsync({
+        orderId,
+        newStatus: 'accepted' as OrderStatus,
+      });
+      toast.success('Order accepted successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to accept order');
+    }
+  };
+
+  const handleDecline = async (orderId: bigint) => {
+    try {
+      await updateOrderStatus.mutateAsync({
+        orderId,
+        newStatus: 'declined' as OrderStatus,
+      });
+      toast.success('Order declined successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to decline order');
+    }
+  };
+
+  const getStatusVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'accepted':
+      case 'delivered':
+        return 'default';
+      case 'shipped':
+        return 'secondary';
+      case 'declined':
+      case 'canceled':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const truncatePrincipal = (principal: string): string => {
+    if (principal.length <= 16) return principal;
+    return `${principal.slice(0, 8)}...${principal.slice(-8)}`;
+  };
+
+  if (isLoading) {
+    return (
       <Card>
         <CardHeader>
-          <CardTitle>Products</CardTitle>
+          <CardTitle>Order Management</CardTitle>
         </CardHeader>
         <CardContent>
-          {productsLoading ? (
-            <p>Loading products...</p>
-          ) : (
-            <ProductTable
-              products={products || []}
-              onEdit={handleEdit}
-            />
-          )}
+          <p>Loading orders...</p>
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  if (!orders || orders.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">No orders yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Order Management</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Delivery Address</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => {
+                const isPending = order.status === 'pending';
+                const isProcessing = updateOrderStatus.isPending;
+                
+                return (
+                  <TableRow key={order.id.toString()}>
+                    <TableCell className="font-medium">#{order.id.toString()}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {truncatePrincipal(order.userId.toString())}
+                    </TableCell>
+                    <TableCell>{order.items.length}</TableCell>
+                    <TableCell className="font-semibold">{formatINR(order.total)}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {order.address ? order.address.split('\n')[0] : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(order.status)}>
+                        {order.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {isPending ? (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleAccept(order.id)}
+                            disabled={isProcessing}
+                            className="gap-1"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDecline(order.id)}
+                            disabled={isProcessing}
+                            className="gap-1"
+                          >
+                            <XCircle className="h-3 w-3" />
+                            Decline
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No actions</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -245,8 +416,8 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
         {addProduct.isPending || editProduct.isPending
           ? 'Saving...'
           : product
-          ? 'Update Product'
-          : 'Add Product'}
+            ? 'Update Product'
+            : 'Add Product'}
       </Button>
     </form>
   );
@@ -272,36 +443,24 @@ function ProductTable({ products, onEdit }: ProductTableProps) {
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Image</TableHead>
-          <TableHead>Title</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Price</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {products.length === 0 ? (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
-              No products yet. Add your first product to get started.
-            </TableCell>
+            <TableHead>ID</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ) : (
-          products.map((product) => (
+        </TableHeader>
+        <TableBody>
+          {products.map((product) => (
             <TableRow key={product.id.toString()}>
-              <TableCell>
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="w-16 h-16 object-cover rounded"
-                />
-              </TableCell>
+              <TableCell>{product.id.toString()}</TableCell>
               <TableCell className="font-medium">{product.title}</TableCell>
               <TableCell>{product.category}</TableCell>
-              <TableCell>${product.price.toFixed(2)}</TableCell>
+              <TableCell>{formatINR(product.price)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button
@@ -322,9 +481,9 @@ function ProductTable({ products, onEdit }: ProductTableProps) {
                 </div>
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

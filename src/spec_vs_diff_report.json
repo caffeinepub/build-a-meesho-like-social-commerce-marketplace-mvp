@@ -1,54 +1,36 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T02:57:37.775Z",
-  "summary": "Diff implements a new /checkout route with a 3-step CheckoutPage, updates Cart CTA to navigate to checkout, and adds INR currency formatting via a new formatINR utility used across several pages. Backend order model is extended to include an optional address field with a migration. However, backend changes shown do not implement a structured delivery address type nor persistence of the chosen payment option on the order record (both required).",
+  "generatedAt": "2026-02-14T03:36:51.745Z",
+  "summary": "Diff implements new accepted/declined order statuses, adds frontend admin order management hooks and UI, and updates buyer OrdersPage to display new statuses. Backend API additions for admin listing and status updates are not visible in the provided backend diff snippet, so their implementation cannot be confirmed from the evidence shown. A new backend migration module was added, which was not explicitly requested.",
   "missing_requirements": [
     {
-      "id": "REQ-20",
-      "requirement": "Backend stores the payment option chosen on the order record.",
-      "reason": "Frontend passes a paymentMethod to checkout, but the backend Order type shown only adds an optional address field; no payment method field is evident in the order model or migration.",
+      "id": "REQ-29",
+      "requirement": "Add an admin-only query API to list all orders and an admin-only update API to transition an order from pending to accepted/declined with clear English errors for: order not found, caller not admin, invalid transition.",
+      "reason": "OrderStatus variants were added, but the diff excerpt for backend/main.mo is truncated and does not show any new getAllOrders/updateOrderStatus methods, nor the required authorization and transition validation/error messages.",
       "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CheckoutPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "requirement": "Persist a structured delivery address type (with the requested fields) with each created order; checkout API should accept the delivery address and persist it.",
-      "reason": "Backend adds `address : ?Text` rather than a structured delivery address record/type containing the required fields (full name, mobile, pincode, address lines, landmark, city, state). Frontend also serializes the address into a single string before sending.",
-      "evidence": [
-        "backend/main.mo",
-        "backend/migration.mo",
-        "frontend/src/pages/CheckoutPage.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "backend/main.mo (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Persisting the checkout address in sessionStorage for client-side persistence.",
-      "reason": "Not requested in the BuildRequest; the requirements only specify saving/validating before continuing, not storing address in sessionStorage.",
+      "description": "Added a backend data migration module (migration.mo) to map old order status types to a new type that includes accepted/declined.",
+      "reason": "The BuildRequest did not request any explicit migration system or a separate migration module; it only required extending statuses and adding admin APIs within the single Motoko actor.",
       "evidence": [
-        "frontend/src/pages/CheckoutPage.tsx"
+        "backend/migration.mo",
+        "backend/main.mo (with migration = Migration.run)"
       ]
     }
   ],
-  "confidence": 0.74,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/marketplace/ProductCard.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CartPage.tsx",
-    "frontend/src/pages/CheckoutPage.tsx",
+    "frontend/src/pages/AdminSellerPage.tsx",
     "frontend/src/pages/OrdersPage.tsx",
-    "frontend/src/pages/ProductDetailsPage.tsx",
-    "frontend/src/utils/currency.ts",
     "project_state.json"
   ]
 }

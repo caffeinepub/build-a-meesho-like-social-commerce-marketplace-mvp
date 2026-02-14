@@ -1,136 +1,58 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Simplified 3-step checkout and INR pricing (frontend-only)",
+  "title": "Seller/admin order accept/decline UI and hooks",
   "requirements": [
     {
-      "id": "REQ-18",
-      "summary": "Add Step 1 (Address) in a simplified checkout flow launched from the Cart page, requiring the user to validate and explicitly save the delivery address before continuing.",
+      "id": "REQ-30",
+      "summary": "Add React Query hooks for admin order listing and accept/decline actions with cache refresh.",
       "acceptanceCriteria": [
-        "From /cart, the primary CTA leads into a checkout experience rather than immediately placing the order.",
-        "The address form includes inputs for: full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state.",
-        "The user cannot proceed to the next step until the address is validated and saved.",
-        "All user-facing text in the checkout flow is in English."
+        "When an order is accepted/declined from the UI, the admin order list refreshes and shows the updated status without a manual page refresh.",
+        "The buyer’s “My Orders” view reflects the new status after data refetch (e.g., navigating back to /orders or refreshing triggers the updated status)."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/pages/CheckoutPage.tsx",
-          "operation": "create",
-          "description": "Create a new CheckoutPage implementing Step 1 (Address): render the required fields, validate inputs, require clicking a “Save address” action that persists the saved state (e.g., in component state + sessionStorage) and only then enables navigation to Step 2. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Change the primary cart CTA from immediate order placement to navigating into the new checkout flow (e.g., /checkout), keeping the cart contents unchanged and prompting sign-in if needed. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-19",
-      "summary": "Implement Step 2 (Review) to show the saved address and cart items (quantities, unit prices, line totals) with an order total before proceeding to payment, including a Back action that preserves the saved address.",
-      "acceptanceCriteria": [
-        "The review step displays the full saved address in a readable, multi-line layout.",
-        "The review step lists each cart item with product title, quantity, unit price, and line total.",
-        "The review step shows an order total that matches the cart subtotal (shipping can remain FREE if currently used).",
-        "A Back action allows returning to the address step without losing the saved address."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/CheckoutPage.tsx",
-          "operation": "modify",
-          "description": "Add Step 2 (Review) UI: render saved address in multi-line layout, list current cart items with quantity, unit price, and computed line total, show order total matching cart subtotal (shipping stays FREE), and provide Back navigation to Step 1 without clearing saved address. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "summary": "Implement Step 3 (Payment) with selectable demo payment option(s) and a final “Pay & Place Order” action that calls the backend checkout capability and navigates to /order-confirmation/$orderId on success (no real payment gateway).",
-      "acceptanceCriteria": [
-        "The payment step requires selecting a payment option before placing the order.",
-        "Clicking “Pay & Place Order” creates the order and navigates to the existing order confirmation route (/order-confirmation/$orderId) on success.",
-        "Backend stores the payment option chosen on the order record (so it can be shown later if needed).",
-        "No external payment providers are used."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/CheckoutPage.tsx",
-          "operation": "modify",
-          "description": "Add Step 3 (Payment): provide at least one selectable payment option (e.g., Cash on Delivery, UPI (demo)), require selection before enabling “Pay & Place Order”, and on submit call the existing checkout mutation with the saved address and chosen payment method; on success navigate to /order-confirmation/$orderId. Handle backend errors with clear English messaging. Verify the component's usage instructions before implementing."
-        },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update the checkout mutation to accept parameters for address string and payment method string (and optional message as needed) and pass them to the backend checkout capability; keep cart/orders query invalidation on success. Verify the component's usage instructions before implementing."
+          "description": "Add seller/admin order management hooks: a query hook to fetch all orders (use a dedicated query key like ['adminOrders']) and mutation hook(s) that call the backend function to update an order status to accepted/declined. Ensure onSuccess invalidates/refetches both the admin orders query and the buyer orders query key ['orders'] when applicable. Use the authorization component’s role-based access control indirectly (admin-only backend checks + UI gating elsewhere); verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-22",
-      "summary": "Display all product, cart, checkout, and order totals in INR formatting across the storefront, product details, cart, checkout flow, and orders list (remove “$” formatting).",
+      "id": "REQ-31",
+      "summary": "Add an admin-only Order Management section in /admin to review pending orders and accept/decline them with feedback and submission locking.",
       "acceptanceCriteria": [
-        "ProductCard price display uses INR formatting (e.g., ₹1,999) instead of “$xx.xx”.",
-        "ProductDetailsPage price and strike-through price use INR formatting.",
-        "CartPage item prices and order summary totals use INR formatting.",
-        "OrdersPage order total uses INR formatting.",
-        "No “$” currency symbol remains in these user-facing price locations."
+        "An admin can navigate to /admin and find an Order Management section.",
+        "Pending orders show Accept and Decline buttons; non-pending orders do not show these action buttons.",
+        "Clicking Accept changes the order status to accepted and updates the UI.",
+        "Clicking Decline changes the order status to declined and updates the UI.",
+        "All user-facing text in this UI is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/currency.ts",
-          "operation": "create",
-          "description": "Create a small currency formatting utility (e.g., formatINR) using Intl.NumberFormat with INR so all price rendering is consistent and centralized."
+          "path": "frontend/src/pages/AdminSellerPage.tsx",
+          "operation": "modify",
+          "description": "Within the existing admin experience, add an \"Order Management\" section that is only rendered for admins. Use the new hooks to load all orders and render a table/list with: order ID, a safe buyer identifier (avoid full principal; use a truncated principal string or profile name if already available), item count, total formatted via formatINR, delivery address summary (first line) when present, and current status. For pending orders only, render Accept and Decline actions wired to the mutation hooks; disable buttons while a mutation is pending to prevent duplicate submissions; show clear English success/error feedback (e.g., using existing toast flow). Use the authorization component (role-based access control) via existing admin gating in this page (useCurrentUser/isAdmin) to ensure visibility is admin-only; verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/marketplace/ProductCard.tsx",
+          "path": "frontend/src/hooks/useCurrentUser.ts",
           "operation": "modify",
-          "description": "Replace $-based formatting with the shared INR formatter for price and strike-through price in ProductCard. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ProductDetailsPage.tsx",
-          "operation": "modify",
-          "description": "Replace $-based formatting with the shared INR formatter for main price and strike-through price on the product details page. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Replace $-based formatting with the shared INR formatter for item prices and order summary totals (subtotal/total) on the cart page. Verify the component's usage instructions before implementing."
-        },
+          "description": "If needed for a smoother admin-only experience, extend current user state to expose any additional admin-check status (e.g., explicit loading/error) used to guard the new Order Management section. Continue using the authorization component’s role-based access control through isCallerAdmin; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-32",
+      "summary": "Update buyer order status badge styling and labels to support accepted/declined consistently.",
+      "acceptanceCriteria": [
+        "OrdersPage renders accepted and declined statuses without crashing and with appropriate badge styling.",
+        "A buyer can see when their order is accepted or declined in the “My Orders” list."
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/OrdersPage.tsx",
           "operation": "modify",
-          "description": "Replace $-based formatting with the shared INR formatter for order totals in the orders list. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CheckoutPage.tsx",
-          "operation": "modify",
-          "description": "Ensure all prices shown in Step 2 (Review) and any totals in Step 3 (Payment) use the shared INR formatter and do not show “$”. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-23",
-      "summary": "Add routing and navigation required for the new checkout flow while keeping existing cart and order confirmation routes working, and ensure checkout requires sign-in consistent with current behavior.",
-      "acceptanceCriteria": [
-        "A new checkout route (or routes) is added to the TanStack Router configuration (frontend/src/App.tsx).",
-        "The existing /cart route still renders the cart page and provides a clear path into checkout.",
-        "The existing /order-confirmation/$orderId route continues to work without regressions.",
-        "Checkout requires sign-in (consistent with the current behavior of requiring sign-in before placing an order)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register a new /checkout route in the TanStack Router configuration and wire it to the new CheckoutPage component, without changing the existing /cart or /order-confirmation/$orderId routes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CheckoutPage.tsx",
-          "operation": "modify",
-          "description": "Wrap checkout content with the existing RequireAuth pattern (or otherwise block the checkout flow until authenticated) to ensure sign-in is required before proceeding. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CartPage.tsx",
-          "operation": "modify",
-          "description": "Ensure /cart still renders normally and provides a clear navigation path into /checkout; preserve the current sign-in prompt behavior before allowing checkout. Verify the component's usage instructions before implementing."
+          "description": "Update status badge variant mapping to include the new statuses: accepted and declined. Ensure the displayed label remains clear and consistent (e.g., 'accepted', 'declined') and that any other existing statuses still render safely with a default variant."
         }
       ]
     }

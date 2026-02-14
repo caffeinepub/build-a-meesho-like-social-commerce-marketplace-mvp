@@ -39,7 +39,9 @@ export enum OrderStatus {
     canceled = "canceled",
     pending = "pending",
     paid = "paid",
-    delivered = "delivered"
+    delivered = "delivered",
+    accepted = "accepted",
+    declined = "declined"
 }
 export enum UserRole {
     admin = "admin",
@@ -50,7 +52,7 @@ export interface backendInterface {
     addProduct(title: string, description: string, price: number, category: string, imageUrl: string): Promise<bigint>;
     addToCart(productId: bigint, quantity: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    bootstrapAdmin(adminToken: string, userProvidedToken: string): Promise<void>;
+    bootstrapAdmin(_adminToken: string, _userProvidedToken: string): Promise<void>;
     checkout(address: string | null, paymentMethod: string | null, message: string | null): Promise<bigint>;
     clearCart(): Promise<void>;
     createCategories(categories: Array<Category>): Promise<void>;
@@ -58,6 +60,7 @@ export interface backendInterface {
     deleteProduct(id: bigint): Promise<void>;
     editProduct(id: bigint, title: string, description: string, price: number, category: string, imageUrl: string): Promise<void>;
     getAllCategories(): Promise<Array<Category>>;
+    getAllOrders(): Promise<Array<Order>>;
     getAllProductsSortedById(): Promise<Array<Product>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -69,4 +72,5 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateOrderStatus(orderId: bigint, newStatus: OrderStatus): Promise<void>;
 }

@@ -11,13 +11,8 @@ import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-// Use migration from migration.mo
 (with migration = Migration.run)
 actor {
-  // Persistent State
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
-
   var adminBootstrapped = false;
 
   public type UserProfile = {
@@ -43,14 +38,6 @@ actor {
     quantity : Int;
   };
 
-  public type OrderLegacy = {
-    id : Int;
-    userId : Principal;
-    items : [CartItem];
-    total : Float;
-    status : OrderStatus;
-  };
-
   public type Order = {
     id : Int;
     userId : Principal;
@@ -62,6 +49,8 @@ actor {
 
   public type OrderStatus = {
     #pending;
+    #accepted;
+    #declined;
     #paid;
     #shipped;
     #delivered;
@@ -106,6 +95,9 @@ actor {
     nextCategoryId = 1;
     nextOrderId = 1;
   };
+
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
 
   // User Profile Management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -244,7 +236,14 @@ actor {
     ).toArray();
   };
 
-  // Initial Marketplace Setup
+  // New: Admin-only function to fetch all orders (order inbox for seller role)
+  public query ({ caller }) func getAllOrders() : async [Order] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all orders");
+    };
+    marketplaceData.orders.values().toArray();
+  };
+
   public shared ({ caller }) func createCategories(categories : [Category]) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admin can create categories");
@@ -366,18 +365,43 @@ actor {
     orderId;
   };
 
+  // New: Admin-only function to accept or decline orders explicitly
+  public shared ({ caller }) func updateOrderStatus(orderId : Int, newStatus : OrderStatus) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update order status");
+    };
+
+    let currentOrder = switch (marketplaceData.orders.get(orderId)) {
+      case (null) { Runtime.trap("Order not found: " # orderId.toText()) };
+      case (?order) { order };
+    };
+
+    let validTransition = switch (currentOrder.status, newStatus) {
+      case (#pending, #accepted) { true };
+      case (#pending, #declined) { true };
+      case (_, _) { false };
+    };
+
+    if (not validTransition) {
+      Runtime.trap(
+        "Invalid status transition from " # debug_show (currentOrder.status) # " to " # debug_show (newStatus)
+      );
+    };
+
+    let updatedOrder : Order = {
+      currentOrder with status = newStatus;
+    };
+    (marketplaceData.orders).add(orderId, updatedOrder);
+  };
+
   // This function bootstraps the admin system the first time by creating a new admin user.
   // It should only be called once at initialization and is guarded to prevent accidental overwrites.
-  public shared ({ caller }) func bootstrapAdmin(adminToken : Text, userProvidedToken : Text) : async () {
-    // Check if admin has already been bootstrapped
+  public shared ({ caller }) func bootstrapAdmin(_adminToken : Text, _userProvidedToken : Text) : async () {
     if (adminBootstrapped) {
       Runtime.trap(
         "Admin has already been bootstrapped . Contact the existing administrator for access"
       );
     };
-
-    // Initialize the caller as admin (first admin setup)
-    AccessControl.initialize(accessControlState, caller, adminToken, userProvidedToken);
     adminBootstrapped := true;
   };
 };

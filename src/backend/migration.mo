@@ -1,10 +1,41 @@
 import Map "mo:core/Map";
 import Int "mo:core/Int";
-import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 
 module {
-  type Product = {
+  type OldOrderStatus = {
+    #pending;
+    #paid;
+    #shipped;
+    #delivered;
+    #canceled;
+  };
+
+  type OldOrder = {
+    id : Int;
+    userId : Principal;
+    items : [OldCartItem];
+    total : Float;
+    status : OldOrderStatus;
+    address : ?Text;
+  };
+
+  type OldCartItem = {
+    productId : Int;
+    quantity : Int;
+  };
+
+  type OldMarketplaceData = {
+    products : Map.Map<Int, OldProduct>;
+    categories : Map.Map<Int, OldCategory>;
+    carts : Map.Map<Principal, [OldCartItem]>;
+    orders : Map.Map<Int, OldOrder>;
+    nextProductId : Int;
+    nextCategoryId : Int;
+    nextOrderId : Int;
+  };
+
+  type OldProduct = {
     id : Int;
     title : Text;
     description : Text;
@@ -13,83 +44,105 @@ module {
     imageUrl : Text;
   };
 
-  type Category = {
+  type OldCategory = {
     id : Int;
     name : Text;
   };
 
-  type CartItem = {
-    productId : Int;
-    quantity : Int;
+  type OldActor = {
+    adminBootstrapped : Bool;
+    userProfiles : Map.Map<Principal, OldUserProfile>;
+    marketplaceData : OldMarketplaceData;
   };
 
-  type OrderStatus = {
+  type OldUserProfile = {
+    name : Text;
+  };
+
+  // New Order Status with #accepted and #declined
+  type NewOrderStatus = {
     #pending;
+    #accepted;
+    #declined;
     #paid;
     #shipped;
     #delivered;
     #canceled;
   };
 
-  type OrderLegacy = {
+  // New Order matches new version
+  type NewOrder = {
     id : Int;
     userId : Principal;
-    items : [CartItem];
+    items : [NewCartItem];
     total : Float;
-    status : OrderStatus;
-  };
-
-  type MarketplaceDataLegacy = {
-    products : Map.Map<Int, Product>;
-    categories : Map.Map<Int, Category>;
-    carts : Map.Map<Principal, [CartItem]>;
-    orders : Map.Map<Int, OrderLegacy>;
-    nextProductId : Int;
-    nextCategoryId : Int;
-    nextOrderId : Int;
-  };
-
-  type Order = {
-    id : Int;
-    userId : Principal;
-    items : [CartItem];
-    total : Float;
-    status : OrderStatus;
+    status : NewOrderStatus;
     address : ?Text;
   };
 
-  type MarketplaceData = {
-    products : Map.Map<Int, Product>;
-    categories : Map.Map<Int, Category>;
-    carts : Map.Map<Principal, [CartItem]>;
-    orders : Map.Map<Int, Order>;
+  // New CartItem matches new version
+  type NewCartItem = {
+    productId : Int;
+    quantity : Int;
+  };
+
+  type NewMarketplaceData = {
+    products : Map.Map<Int, NewProduct>;
+    categories : Map.Map<Int, NewCategory>;
+    carts : Map.Map<Principal, [NewCartItem]>;
+    orders : Map.Map<Int, NewOrder>;
     nextProductId : Int;
     nextCategoryId : Int;
     nextOrderId : Int;
   };
 
-  type ActorLegacy = {
-    adminBootstrapped : Bool;
-    marketplaceData : MarketplaceDataLegacy;
+  type NewProduct = {
+    id : Int;
+    title : Text;
+    description : Text;
+    price : Float;
+    category : Text;
+    imageUrl : Text;
   };
 
-  type Actor = {
-    adminBootstrapped : Bool;
-    marketplaceData : MarketplaceData;
+  type NewCategory = {
+    id : Int;
+    name : Text;
   };
 
-  public func run(actorLegacy : ActorLegacy) : Actor {
-    let newOrders = actorLegacy.marketplaceData.orders.map<Int, OrderLegacy, Order>(
+  type NewActor = {
+    adminBootstrapped : Bool;
+    userProfiles : Map.Map<Principal, NewUserProfile>;
+    marketplaceData : NewMarketplaceData;
+  };
+
+  type NewUserProfile = {
+    name : Text;
+  };
+
+  // Migration function
+  public func run(old : OldActor) : NewActor {
+    let newOrders = old.marketplaceData.orders.map<Int, OldOrder, NewOrder>(
       func(_id, oldOrder) {
-        { oldOrder with address = null };
+        {
+          oldOrder with
+          status = switch (oldOrder.status) {
+            case (#pending) { #pending };
+            case (#paid) { #paid };
+            case (#shipped) { #shipped };
+            case (#delivered) { #delivered };
+            case (#canceled) { #canceled };
+          };
+        };
       }
     );
+    let newMarketplaceData = {
+      old.marketplaceData with
+      orders = newOrders;
+    };
     {
-      adminBootstrapped = actorLegacy.adminBootstrapped;
-      marketplaceData = {
-        actorLegacy.marketplaceData with
-        orders = newOrders;
-      };
+      old with
+      marketplaceData = newMarketplaceData;
     };
   };
 };

@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatINR } from '@/utils/currency';
 import RequireAuth from '@/components/auth/RequireAuth';
+import DemoPaymentSection from '@/components/checkout/DemoPaymentSection';
+import { simulatePaymentProcessing } from '@/components/checkout/demoPaymentProcessing';
+import {
+  generateDemoTransactionId,
+  storeDemoTransactionId,
+} from '@/components/checkout/demoPaymentReference';
 
 interface AddressData {
   fullName: string;
@@ -44,6 +49,8 @@ export default function CheckoutPage() {
   });
   const [addressSaved, setAddressSaved] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [isPaymentValid, setIsPaymentValid] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleAddressChange = (field: keyof AddressData, value: string) => {
     setAddressData((prev) => ({ ...prev, [field]: value }));
@@ -81,7 +88,6 @@ export default function CheckoutPage() {
   const handleSaveAddress = () => {
     if (validateAddress()) {
       setAddressSaved(true);
-      // Store in sessionStorage for persistence
       sessionStorage.setItem('checkoutAddress', JSON.stringify(addressData));
       toast.success('Address saved successfully');
     }
@@ -105,25 +111,49 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!isPaymentValid) {
+      toast.error('Please complete the payment details');
+      return;
+    }
+
     if (!identity) {
       toast.error('Please sign in to place an order');
       return;
     }
 
+    if (isProcessing) {
+      return;
+    }
+
     try {
+      setIsProcessing(true);
+
+      // Simulate payment processing
+      await simulatePaymentProcessing(2000);
+
       const addressString = `${addressData.fullName}, ${addressData.mobile}\n${addressData.addressLine1}${addressData.addressLine2 ? ', ' + addressData.addressLine2 : ''}\n${addressData.landmark ? addressData.landmark + ', ' : ''}${addressData.city}, ${addressData.state} - ${addressData.pincode}`;
-      
+
       const orderId = await checkout.mutateAsync({
         address: addressString,
         paymentMethod,
       });
-      
+
+      // Generate and store transaction ID for non-COD methods
+      if (paymentMethod !== 'cod') {
+        const transactionId = generateDemoTransactionId();
+        storeDemoTransactionId(orderId.toString(), transactionId);
+      }
+
       // Clear saved address
       sessionStorage.removeItem('checkoutAddress');
-      
+
       toast.success('Order placed successfully!');
-      navigate({ to: '/order-confirmation/$orderId', params: { orderId: orderId.toString() } });
+      navigate({
+        to: '/order-confirmation/$orderId',
+        params: { orderId: orderId.toString() },
+      });
     } catch (error: any) {
+      setIsProcessing(false);
       toast.error(error.message || 'Failed to place order');
     }
   };
@@ -136,7 +166,9 @@ export default function CheckoutPage() {
         <p>{addressData.addressLine1}</p>
         {addressData.addressLine2 && <p>{addressData.addressLine2}</p>}
         {addressData.landmark && <p>Landmark: {addressData.landmark}</p>}
-        <p>{addressData.city}, {addressData.state} - {addressData.pincode}</p>
+        <p>
+          {addressData.city}, {addressData.state} - {addressData.pincode}
+        </p>
       </div>
     );
   };
@@ -148,21 +180,43 @@ export default function CheckoutPage() {
         <div className="mb-8">
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 1
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                }`}
+              >
                 {step > 1 ? <CheckCircle2 className="h-5 w-5" /> : '1'}
               </div>
               <span className="text-sm font-medium">Address</span>
             </div>
-            <div className={`h-0.5 w-16 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
+            <div
+              className={`h-0.5 w-16 ${step >= 2 ? 'bg-primary' : 'bg-muted'}`}
+            />
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 2
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                }`}
+              >
                 {step > 2 ? <CheckCircle2 className="h-5 w-5" /> : '2'}
               </div>
               <span className="text-sm font-medium">Review</span>
             </div>
-            <div className={`h-0.5 w-16 ${step >= 3 ? 'bg-primary' : 'bg-muted'}`} />
+            <div
+              className={`h-0.5 w-16 ${step >= 3 ? 'bg-primary' : 'bg-muted'}`}
+            />
             <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step >= 3
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                }`}
+              >
                 3
               </div>
               <span className="text-sm font-medium">Payment</span>
@@ -183,7 +237,9 @@ export default function CheckoutPage() {
                   <Input
                     id="fullName"
                     value={addressData.fullName}
-                    onChange={(e) => handleAddressChange('fullName', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('fullName', e.target.value)
+                    }
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -193,7 +249,9 @@ export default function CheckoutPage() {
                     id="mobile"
                     type="tel"
                     value={addressData.mobile}
-                    onChange={(e) => handleAddressChange('mobile', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('mobile', e.target.value)
+                    }
                     placeholder="10-digit mobile number"
                     maxLength={10}
                   />
@@ -205,7 +263,9 @@ export default function CheckoutPage() {
                 <Input
                   id="addressLine1"
                   value={addressData.addressLine1}
-                  onChange={(e) => handleAddressChange('addressLine1', e.target.value)}
+                  onChange={(e) =>
+                    handleAddressChange('addressLine1', e.target.value)
+                  }
                   placeholder="House No., Building Name"
                 />
               </div>
@@ -215,7 +275,9 @@ export default function CheckoutPage() {
                 <Input
                   id="addressLine2"
                   value={addressData.addressLine2}
-                  onChange={(e) => handleAddressChange('addressLine2', e.target.value)}
+                  onChange={(e) =>
+                    handleAddressChange('addressLine2', e.target.value)
+                  }
                   placeholder="Road Name, Area, Colony (Optional)"
                 />
               </div>
@@ -226,7 +288,9 @@ export default function CheckoutPage() {
                   <Input
                     id="landmark"
                     value={addressData.landmark}
-                    onChange={(e) => handleAddressChange('landmark', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('landmark', e.target.value)
+                    }
                     placeholder="Nearby landmark (Optional)"
                   />
                 </div>
@@ -236,7 +300,9 @@ export default function CheckoutPage() {
                     id="pincode"
                     type="text"
                     value={addressData.pincode}
-                    onChange={(e) => handleAddressChange('pincode', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('pincode', e.target.value)
+                    }
                     placeholder="6-digit pincode"
                     maxLength={6}
                   />
@@ -249,7 +315,9 @@ export default function CheckoutPage() {
                   <Input
                     id="city"
                     value={addressData.city}
-                    onChange={(e) => handleAddressChange('city', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('city', e.target.value)
+                    }
                     placeholder="Enter your city"
                   />
                 </div>
@@ -258,7 +326,9 @@ export default function CheckoutPage() {
                   <Input
                     id="state"
                     value={addressData.state}
-                    onChange={(e) => handleAddressChange('state', e.target.value)}
+                    onChange={(e) =>
+                      handleAddressChange('state', e.target.value)
+                    }
                     placeholder="Enter your state"
                   />
                 </div>
@@ -322,9 +392,13 @@ export default function CheckoutPage() {
                     />
                     <div className="flex-1">
                       <h4 className="font-semibold">{item.product.title}</h4>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity.toString()}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Qty: {item.quantity.toString()}
+                      </p>
                       <p className="text-sm font-medium">
-                        {formatINR(item.product.price)} × {item.quantity.toString()} = {formatINR(item.product.price * Number(item.quantity))}
+                        {formatINR(item.product.price)} ×{' '}
+                        {item.quantity.toString()} ={' '}
+                        {formatINR(item.product.price * Number(item.quantity))}
                       </p>
                     </div>
                   </div>
@@ -367,42 +441,27 @@ export default function CheckoutPage() {
         {/* Step 3: Payment */}
         {step === 3 && (
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Payment Method</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent">
-                    <RadioGroupItem value="cod" id="cod" />
-                    <Label htmlFor="cod" className="flex-1 cursor-pointer">
-                      <div>
-                        <p className="font-semibold">Cash on Delivery</p>
-                        <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
-                      </div>
-                    </Label>
+            <DemoPaymentSection
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              onValidationChange={setIsPaymentValid}
+            />
+
+            {isProcessing && (
+              <Card className="bg-primary/5 border-primary">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-center gap-3">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <p className="font-medium text-primary">
+                      Processing payment...
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent">
-                    <RadioGroupItem value="upi" id="upi" />
-                    <Label htmlFor="upi" className="flex-1 cursor-pointer">
-                      <div>
-                        <p className="font-semibold">UPI (Demo)</p>
-                        <p className="text-sm text-muted-foreground">Pay using UPI apps</p>
-                      </div>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer hover:bg-accent">
-                    <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card" className="flex-1 cursor-pointer">
-                      <div>
-                        <p className="font-semibold">Credit/Debit Card (Demo)</p>
-                        <p className="text-sm text-muted-foreground">Pay using your card</p>
-                      </div>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </CardContent>
-            </Card>
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    Please wait while we process your order
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -429,6 +488,7 @@ export default function CheckoutPage() {
               <Button
                 variant="outline"
                 onClick={() => setStep(2)}
+                disabled={isProcessing}
                 className="flex-1"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -436,11 +496,18 @@ export default function CheckoutPage() {
               </Button>
               <Button
                 onClick={handlePlaceOrder}
-                disabled={checkout.isPending || !paymentMethod}
+                disabled={!paymentMethod || !isPaymentValid || isProcessing}
                 className="flex-1"
                 size="lg"
               >
-                {checkout.isPending ? 'Processing...' : 'Pay & Place Order'}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Pay & Place Order'
+                )}
               </Button>
             </div>
           </div>

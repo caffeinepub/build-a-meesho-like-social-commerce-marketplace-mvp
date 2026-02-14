@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-simplified-3-step-checkout-flow-starting-from-the-cart-page-step-1-collects-a-delivery-address-full-name-mobile-number-pincode-address-line-1-address-line-2-optional-landmark-optional-city-state-and-requires-the-user-to-click-save-address-before-continuing",
-      "featureTitle": "Add a simplified 3-step checkout flow starting from the Cart page: Step 1 collects a delivery address (full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state) and requires the user to click “Save address” before continuing.",
+      "featureId": "feature-add-react-query-hooks-for-seller-admin-order-management-that-integrate-with-the-new-backend-apis-frontend-changes-must-add-a-query-hook-to-fetch-all-orders-for-the-current-authenticated-admin-add-mutation-hook-s-to-accept-an-order-and-to-decline-an-order-or-a-single-mutation-that-updates-status-ensure-relevant-caches-are-refreshed-after-mutations-e-g-invalidate-refetch-both-the-admin-orders-list-and-the-buyer-orders-query-key-orders-when-applicable",
+      "featureTitle": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
       "files": [
-        "frontend/src/pages/CartPage.tsx",
-        "frontend/src/pages/CheckoutPage.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,15 +16,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-18"
+        "REQ-30"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-an-order-review-step-step-2-that-shows-the-saved-delivery-address-and-the-current-cart-items-with-quantities-and-line-totals-plus-an-order-total-before-the-user-proceeds-to-payment",
-      "featureTitle": "Implement an order review step (Step 2) that shows the saved delivery address and the current cart items with quantities and line totals, plus an order total, before the user proceeds to payment.",
+      "featureId": "feature-add-a-seller-admin-order-review-ui-that-allows-accepting-or-declining-newly-placed-orders-frontend-changes-must-add-an-order-management-section-within-the-existing-admin-experience-adminsellerpage-that-is-visible-only-to-admins-display-a-list-of-orders-with-key-details-order-id-buyer-principal-or-a-safe-identifier-item-count-total-inr-formatting-delivery-address-summary-if-present-current-status-for-orders-in-pending-status-show-accept-and-decline-actions-after-an-action-completes-show-clear-english-success-error-feedback-and-disable-prevent-duplicate-submissions-while-the-mutation-is-pending",
+      "featureTitle": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
       "files": [
-        "frontend/src/pages/CheckoutPage.tsx"
+        "frontend/src/pages/AdminSellerPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -36,16 +35,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-19"
+        "REQ-31"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-a-simple-payment-step-step-3-with-at-least-one-selectable-payment-option-e-g-cash-on-delivery-and-or-upi-demo-and-a-final-pay-place-order-action-that-completes-the-order-without-integrating-any-real-payment-gateway",
-      "featureTitle": "Implement a simple payment step (Step 3) with at least one selectable payment option (e.g., “Cash on Delivery” and/or “UPI (demo)”) and a final “Pay & Place Order” action that completes the order without integrating any real payment gateway.",
+      "featureId": "feature-update-buyer-facing-order-status-display-to-handle-the-new-accepted-declined-statuses-consistently-frontend-changes-must-update-orders-orderspage-status-badge-styling-variants-to-include-the-new-statuses-ensure-the-status-label-shown-to-the-user-is-clear-and-consistent-e-g-accepted-declined",
+      "featureTitle": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CheckoutPage.tsx"
+        "frontend/src/pages/OrdersPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -56,52 +54,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-20"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-display-all-product-cart-and-order-totals-in-inr-indian-rupees-across-the-storefront-product-cards-product-details-page-cart-page-checkout-flow-and-orders-list-remove-formatting-in-these-places",
-      "featureTitle": "Display all product, cart, and order totals in INR (Indian Rupees) across the storefront product cards, product details page, cart page, checkout flow, and orders list; remove “$” formatting in these places.",
-      "files": [
-        "frontend/src/components/marketplace/ProductCard.tsx",
-        "frontend/src/pages/CartPage.tsx",
-        "frontend/src/pages/CheckoutPage.tsx",
-        "frontend/src/pages/OrdersPage.tsx",
-        "frontend/src/pages/ProductDetailsPage.tsx",
-        "frontend/src/utils/currency.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-22"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-routing-and-navigation-needed-for-the-simplified-checkout-flow-new-checkout-route-s-keeping-the-existing-cart-and-order-confirmation-routes-working",
-      "featureTitle": "Add routing and navigation needed for the simplified checkout flow (new checkout route(s)), keeping the existing cart and order confirmation routes working.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/pages/CartPage.tsx",
-        "frontend/src/pages/CheckoutPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-23"
+        "REQ-32"
       ],
       "confidence": "high"
     }

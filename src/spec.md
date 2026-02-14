@@ -1,15 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Add a simplified 3-step checkout flow (address → review → payment) from the cart and display all prices in INR across the storefront and orders.
+**Goal:** Let the seller/admin review newly placed customer orders and explicitly accept or decline them, with updated order status shown to buyers.
 
 **Planned changes:**
-- Update the Cart page CTA to start a new checkout experience instead of immediately placing an order.
-- Add Step 1 (Address): a delivery address form (full name, mobile number, pincode, address line 1, optional address line 2, optional landmark, city, state) that must be validated and saved before continuing.
-- Add Step 2 (Review): show the saved address and a full cart summary (items, quantities, unit prices, line totals, and order total), with Back navigation to the address step without losing the saved address.
-- Add Step 3 (Payment): require selecting a payment option (e.g., Cash on Delivery and/or UPI (demo)) and provide “Pay & Place Order” to create the order and navigate to `/order-confirmation/$orderId` without any real payment gateway integration.
-- Extend backend order creation to persist the delivery address and chosen payment option on the order record, and return a clear English error when attempting checkout with an empty cart.
-- Update price formatting throughout product cards, product details, cart, checkout, and orders list to use INR (₹) and remove “$” formatting.
-- Add/adjust TanStack Router routes and navigation for checkout while keeping `/cart` and `/order-confirmation/$orderId` working, and ensure checkout requires sign-in.
+- Extend the backend `OrderStatus` to include `accepted` and `declined`, while keeping `checkout(...)` creating `pending` orders.
+- Add admin-only backend APIs to (1) list all orders and (2) accept/decline a pending order, with clear English errors for non-admin access, missing orders, and invalid status transitions.
+- Add frontend React Query hooks for admin order listing and accept/decline mutations, including cache invalidation/refresh for both admin orders and the buyer `['orders']` query.
+- Add an admin-only “Order Management” section in `/admin` to view orders and accept/decline pending ones, with English success/error feedback and disabled duplicate submissions during mutation.
+- Update buyer `/orders` status badge display/styling to support `accepted` and `declined` consistently.
 
-**User-visible outcome:** Users can proceed from cart through a 3-step English checkout (save address, review order, choose payment) and place an order, while seeing all prices displayed in INR (₹) across the app.
+**User-visible outcome:** Admins can go to `/admin` to see an Order Management list and accept or decline pending orders; buyers see their order status update to accepted or declined in “My Orders.”

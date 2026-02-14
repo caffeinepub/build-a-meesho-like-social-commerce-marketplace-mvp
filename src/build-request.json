@@ -1,139 +1,92 @@
 {
   "kind": "build_request",
-  "title": "Simplified 3-step checkout (address → review → payment) and INR pricing",
+  "title": "Add seller ability to accept or decline customer orders",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-18",
-      "text": "Add a simplified 3-step checkout flow starting from the Cart page: Step 1 collects a delivery address (full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state) and requires the user to click “Save address” before continuing.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-9"
-        ],
-        "quotes": [
-          "AFTER WE ADD PRODUCT TO CART ASK ADDRESS FULL WITH NAME MOBILE NO. PIN CODE ADDRESS LINE-1 THEN 2 AND LANDMARK CITY STATE AND THEN ASK TO SAVE IT",
-          "DO THE SAME THING IN SIMPLER FORM AND CAN TRANSFORM IT BY YOUR CHOICE"
-        ]
-      },
-      "acceptanceCriteria": [
-        "From /cart, the primary CTA leads into a checkout experience rather than immediately placing the order.",
-        "The address form includes inputs for: full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state.",
-        "The user cannot proceed to the next step until the address is validated and saved.",
-        "All user-facing text in the checkout flow is in English."
-      ]
-    },
-    {
-      "id": "REQ-19",
-      "text": "Implement an order review step (Step 2) that shows the saved delivery address and the current cart items with quantities and line totals, plus an order total, before the user proceeds to payment.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-9"
-        ],
-        "quotes": [
-          "THEN AFTER THAT PREVIEW ORDER SUMMARY WHERE ADRESS AND PRODUCT WITH PRICE CAN BE SEEEN",
-          "DO THE SAME THING IN SIMPLER FORM AND CAN TRANSFORM IT BY YOUR CHOICE"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The review step displays the full saved address in a readable, multi-line layout.",
-        "The review step lists each cart item with product title, quantity, unit price, and line total.",
-        "The review step shows an order total that matches the cart subtotal (shipping can remain FREE if currently used).",
-        "A Back action allows returning to the address step without losing the saved address."
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "text": "Implement a simple payment step (Step 3) with at least one selectable payment option (e.g., “Cash on Delivery” and/or “UPI (demo)”) and a final “Pay & Place Order” action that completes the order without integrating any real payment gateway.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-9"
-        ],
-        "quotes": [
-          "AND THEN COMPLETE PAYMENT OPTION",
-          "DO THE SAME THING IN SIMPLER FORM AND CAN TRANSFORM IT BY YOUR CHOICE"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The payment step requires selecting a payment option before placing the order.",
-        "Clicking “Pay & Place Order” creates the order and navigates to the existing order confirmation route (/order-confirmation/$orderId) on success.",
-        "Backend stores the payment option chosen on the order record (so it can be shown later if needed).",
-        "No external payment providers are used."
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "text": "Extend the backend order model and checkout API to persist the delivery address with each order created from the new checkout flow.",
+      "id": "REQ-29",
+      "text": "Extend the backend order lifecycle to support seller decisions by adding explicit order statuses for “accepted” and “declined”, and expose admin-only APIs to list all orders and to accept/decline an order.\n\nBackend changes must:\n- Update `OrderStatus` in `backend/main.mo` to include variants for accepted and declined.\n- Keep the existing `checkout(...)` behavior creating new orders with status `#pending`.\n- Add a query method that returns a list of all orders for admins only (seller/admin order inbox).\n- Add an admin-only update method that lets an admin change an order’s status from `pending` to either `accepted` or `declined`, with clear English error messages when the order does not exist, the caller is not an admin, or the transition is invalid.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "ASK ADDRESS FULL WITH NAME MOBILE NO. PIN CODE ADDRESS LINE-1 THEN 2 AND LANDMARK CITY STATE"
+          "when a customer place  a order so there should be a option for the person who is seeling that he wants to accept or decline the order"
         ]
       },
       "acceptanceCriteria": [
-        "A structured delivery address type is added in the Motoko canister (including the fields requested by the user).",
-        "The checkout flow uses a backend method that accepts the delivery address and returns a created orderId.",
-        "The created order record persists the address data alongside items and totals.",
-        "If the user has an empty cart, the backend checkout call returns a clear English error (or equivalent failure behavior) rather than creating an empty order."
+        "Placing an order via the existing `checkout(...)` call creates an order with status `pending`.",
+        "A non-admin caller cannot list all orders and cannot accept/decline any order; calls fail with clear English errors.",
+        "An admin can list all orders and see newly placed orders in the results.",
+        "An admin can set a pending order to accepted or declined; invalid order IDs and invalid transitions return clear English errors.",
+        "Existing buyer-facing `getOrders()` continues to work and includes the updated status values for that buyer’s orders."
       ]
     },
     {
-      "id": "REQ-22",
-      "text": "Display all product, cart, and order totals in INR (Indian Rupees) across the storefront product cards, product details page, cart page, checkout flow, and orders list; remove “$” formatting in these places.",
+      "id": "REQ-30",
+      "text": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "PRICE OF PRODUCT SHOULD BE IN INR RUPPESS INDIA"
+          "there should be a option for the person who is seeling that he wants to accept or decline the order"
         ]
       },
       "acceptanceCriteria": [
-        "ProductCard price display uses INR formatting (e.g., ₹1,999) instead of “$xx.xx”.",
-        "ProductDetailsPage price and strike-through price use INR formatting.",
-        "CartPage item prices and order summary totals use INR formatting.",
-        "OrdersPage order total uses INR formatting.",
-        "No “$” currency symbol remains in these user-facing price locations."
+        "When an order is accepted/declined from the UI, the admin order list refreshes and shows the updated status without a manual page refresh.",
+        "The buyer’s “My Orders” view reflects the new status after data refetch (e.g., navigating back to /orders or refreshing triggers the updated status)."
       ]
     },
     {
-      "id": "REQ-23",
-      "text": "Add routing and navigation needed for the simplified checkout flow (new checkout route(s)), keeping the existing cart and order confirmation routes working.",
+      "id": "REQ-31",
+      "text": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-9"
+          "msg-4"
         ],
         "quotes": [
-          "DO THE SAME THING IN SIMPLER FORM AND CAN TRANSFORM IT BY YOUR CHOICE"
+          "option for the person who is seeling that he wants to accept or decline the order"
         ]
       },
       "acceptanceCriteria": [
-        "A new checkout route (or routes) is added to the TanStack Router configuration (frontend/src/App.tsx).",
-        "The existing /cart route still renders the cart page and provides a clear path into checkout.",
-        "The existing /order-confirmation/$orderId route continues to work without regressions.",
-        "Checkout requires sign-in (consistent with the current behavior of requiring sign-in before placing an order)."
+        "An admin can navigate to /admin and find an Order Management section.",
+        "Pending orders show Accept and Decline buttons; non-pending orders do not show these action buttons.",
+        "Clicking Accept changes the order status to accepted and updates the UI.",
+        "Clicking Decline changes the order status to declined and updates the UI.",
+        "All user-facing text in this UI is in English."
+      ]
+    },
+    {
+      "id": "REQ-32",
+      "text": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "accept or decline the order"
+        ]
+      },
+      "acceptanceCriteria": [
+        "OrdersPage renders accepted and declined statuses without crashing and with appropriate badge styling.",
+        "A buyer can see when their order is accepted or declined in the “My Orders” list."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
-    "Do not modify frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
+    "Do not edit any files under `frontend/src/components/ui` or other frontend immutable paths listed in SYSTEM_CONTEXT.",
     "Use English for all user-facing text."
   ],
   "nonGoals": [
-    "Integrating a real payment gateway or processing real payments.",
-    "Adding shipping rate calculation, tax calculation, or coupons/discount codes beyond the existing mock discount visuals.",
-    "Implementing real-time order tracking or notifications."
+    "Implementing multi-seller support or assigning orders to specific sellers beyond the existing admin model.",
+    "Adding real payment capture/refunds, notifications, email/SMS, or real-time updates.",
+    "Adding external databases or third-party services."
   ],
   "imageRequirements": {
     "required": [],

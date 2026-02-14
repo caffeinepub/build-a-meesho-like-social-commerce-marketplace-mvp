@@ -13,10 +13,10 @@
   "frontend/src/pages/StorefrontPage.tsx": "Homepage with hero section, search bar, category filter, and product grid displaying all marketplace items.",
   "frontend/src/pages/ProductDetailsPage.tsx": "Product detail page with INR-formatted prices, quantity selector, and add to cart functionality.",
   "frontend/src/pages/CartPage.tsx": "Shopping cart page with INR-formatted prices, quantity controls, and \"Proceed to Checkout\" button that navigates to the new checkout flow.",
-  "frontend/src/pages/OrdersPage.tsx": "Protected page displaying user's order history with INR-formatted totals, status badges, and delivery address preview.",
-  "frontend/src/pages/OrderConfirmationPage.tsx": "Success page shown after checkout with order ID and navigation to orders or continue shopping.",
-  "frontend/src/pages/AdminSellerPage.tsx": "Protected admin page with product management table and form dialog; non-admin users see a bootstrap CTA that calls the backend admin bootstrap method and shows success/error feedback via toast, with immediate UI update after successful promotion.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including updated checkout mutation that accepts address, paymentMethod, and message parameters, and updated seed data with INR pricing.",
+  "frontend/src/pages/OrdersPage.tsx": "Protected page displaying user's order history with INR-formatted totals, status badges (including accepted/declined), and delivery address preview.",
+  "frontend/src/pages/OrderConfirmationPage.tsx": "Order confirmation page displaying order ID and transaction reference (for non-COD methods) retrieved from sessionStorage.",
+  "frontend/src/pages/AdminSellerPage.tsx": "Protected admin page with tabbed interface for product management and order management; includes OrderManagement component that displays all orders with accept/decline actions for pending orders, showing customer info, totals, and delivery addresses.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including new admin order management hooks (useGetAllOrders, useUpdateOrderStatus) that fetch all orders and update order status with proper cache invalidation.",
   "frontend/src/hooks/useCart.ts": "Cart state management hooks that fetch cart items, merge with product data, calculate subtotal, and provide mutations for add/update/remove operations.",
   "frontend/src/hooks/useCurrentUser.ts": "Hook that combines identity, user profile, and admin role queries to provide complete current user state, now exporting the role query key for external invalidation.",
   "frontend/src/index.css": "Global styles with warm orange/red OKLCH color palette for light and dark modes, avoiding generic blue/purple tones.",
@@ -24,5 +24,11 @@
   "frontend/src/components/admin/AdminProductManagementHelp.tsx": "Help component that displays instructions for adding products, listing required fields (title, description, price, category, image URL) and step-by-step guidance for admin users.",
   "frontend/src/pages/ProfilePage.tsx": "Protected profile page displaying user's Principal ID with copy functionality, editable profile name with validation, and admin status badge, wrapped in RequireAuth component.",
   "frontend/src/utils/currency.ts": "Utility function for formatting prices in Indian Rupees (INR) using Intl.NumberFormat.",
-  "frontend/src/pages/CheckoutPage.tsx": "Three-step checkout flow with address form (step 1), order review with saved address and cart items (step 2), and payment method selection with final order placement (step 3), wrapped in RequireAuth."
+  "frontend/src/pages/CheckoutPage.tsx": "Three-step checkout flow with enhanced Step 3 featuring realistic demo payment UI, validation, processing simulation, and duplicate submission guards.",
+  "frontend/src/components/checkout/demoPaymentValidation.ts": "Client-side validation helpers for demo UPI and card payment details with English-only error messages.",
+  "frontend/src/components/checkout/demoPaymentProcessing.ts": "Promise-based helper to simulate payment processing latency for realistic demo experience.",
+  "frontend/src/components/checkout/demoPaymentReference.ts": "Utilities to generate, store, and retrieve demo transaction IDs in sessionStorage for non-COD orders.",
+  "frontend/src/components/checkout/DemoPaymentDisclaimer.tsx": "Compact disclaimer component informing users that payment is demo-only with no real money processed.",
+  "frontend/src/components/checkout/DemoPaymentMethodPanel.tsx": "Method-specific payment panels for COD, UPI, and Card with real-time validation and formatted inputs.",
+  "frontend/src/components/checkout/DemoPaymentSection.tsx": "Composed payment section with method selection radio group and conditional method-specific panels."
 }
