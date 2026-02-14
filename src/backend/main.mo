@@ -7,10 +7,11 @@ import Order "mo:core/Order";
 import Float "mo:core/Float";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Migration "migration";
 
+// Use migration from migration.mo
 (with migration = Migration.run)
 actor {
   // Persistent State
@@ -42,12 +43,21 @@ actor {
     quantity : Int;
   };
 
+  public type OrderLegacy = {
+    id : Int;
+    userId : Principal;
+    items : [CartItem];
+    total : Float;
+    status : OrderStatus;
+  };
+
   public type Order = {
     id : Int;
     userId : Principal;
     items : [CartItem];
     total : Float;
     status : OrderStatus;
+    address : ?Text;
   };
 
   public type OrderStatus = {
@@ -70,7 +80,7 @@ actor {
     public func compareByCategory(product1 : Product, product2 : Product) : Order.Order {
       switch (Text.compare(product1.category, product2.category)) {
         case (#equal) { compare(product1, product2) };
-	      case (order) { order };
+        case (order) { order };
       };
     };
   };
@@ -87,7 +97,7 @@ actor {
 
   let userProfiles = Map.empty<Principal, UserProfile>();
 
-  var marketplaceData = {
+  var marketplaceData : MarketplaceData = {
     products = Map.empty<Int, Product>();
     categories = Map.empty<Int, Category>();
     carts = Map.empty<Principal, [CartItem]>();
@@ -314,7 +324,7 @@ actor {
     (marketplaceData.carts).remove(caller);
   };
 
-  public shared ({ caller }) func checkout() : async Int {
+  public shared ({ caller }) func checkout(address : ?Text, paymentMethod : ?Text, message : ?Text) : async Int {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can checkout");
     };
@@ -342,6 +352,7 @@ actor {
       items = cart;
       total;
       status = #pending;
+      address;
     };
 
     (marketplaceData.orders).add(orderId, newOrder);

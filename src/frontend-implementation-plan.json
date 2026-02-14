@@ -1,62 +1,136 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Self-service admin bootstrap UI and immediate role refresh",
+  "title": "Simplified 3-step checkout and INR pricing (frontend-only)",
   "requirements": [
     {
-      "id": "REQ-12",
-      "summary": "Provide a signed-in non-admin UI path to trigger one-time admin bootstrap and show clear English success/failure feedback",
+      "id": "REQ-18",
+      "summary": "Add Step 1 (Address) in a simplified checkout flow launched from the Cart page, requiring the user to validate and explicitly save the delivery address before continuing.",
       "acceptanceCriteria": [
-        "A signed-in non-admin user can see a button/CTA to become admin (only shown when they are not admin).",
-        "Clicking the CTA calls the backend admin bootstrap method and shows a success toast/message on success.",
-        "On failure (e.g., admin already exists), the UI shows the backend’s error message in a user-friendly way.",
-        "After success, the UI updates without a full page refresh and the Product Management entry becomes visible in the authenticated account menu."
+        "From /cart, the primary CTA leads into a checkout experience rather than immediately placing the order.",
+        "The address form includes inputs for: full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state.",
+        "The user cannot proceed to the next step until the address is validated and saved.",
+        "All user-facing text in the checkout flow is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Extend the typed backend interface to include the new self-service admin bootstrap backend function (as implemented in the backend) so the frontend can call it safely. Ensure the signature matches the backend capability exactly."
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "create",
+          "description": "Create a new CheckoutPage implementing Step 1 (Address): render the required fields, validate inputs, require clicking a “Save address” action that persists the saved state (e.g., in component state + sessionStorage) and only then enables navigation to Step 2. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/pages/CartPage.tsx",
           "operation": "modify",
-          "description": "Add a React Query mutation hook for calling the new self-service admin bootstrap backend function and for surfacing errors to the UI. Use the authorization component’s role-based access control assumptions (caller identity + role checks) to keep behavior consistent; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/AdminSellerPage.tsx",
-          "operation": "modify",
-          "description": "Update the existing non-admin access-restricted /admin experience to include an English CTA (e.g., “Make my account an admin”) that is only shown to signed-in non-admin users, calls the new bootstrap mutation, and shows success/error feedback via toast/message. Use the authorization component’s admin gating model (isAdmin) to decide which UI to show; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/auth/AuthControls.tsx",
-          "operation": "modify",
-          "description": "Add a non-admin-only dropdown menu item that navigates the signed-in user to /admin to access the bootstrap CTA, while keeping the existing admin-only “Product Management” entry for admins. Use the authorization component’s role-derived UI gating (isAdmin) for conditional visibility; verify the component's usage instructions before implementing."
+          "description": "Change the primary cart CTA from immediate order placement to navigating into the new checkout flow (e.g., /checkout), keeping the cart contents unchanged and prompting sign-in if needed. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-13",
-      "summary": "Invalidate/refetch cached role state immediately after bootstrap so admin-gated UI updates in-session",
+      "id": "REQ-19",
+      "summary": "Implement Step 2 (Review) to show the saved address and cart items (quantities, unit prices, line totals) with an order total before proceeding to payment, including a Back action that preserves the saved address.",
       "acceptanceCriteria": [
-        "After the admin bootstrap succeeds, the app updates the user’s admin status in the UI within the same session.",
-        "Admin-only navigation and the /admin page become accessible immediately after the role refresh."
+        "The review step displays the full saved address in a readable, multi-line layout.",
+        "The review step lists each cart item with product title, quantity, unit price, and line total.",
+        "The review step shows an order total that matches the cart subtotal (shipping can remain FREE if currently used).",
+        "A Back action allows returning to the address step without losing the saved address."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Add Step 2 (Review) UI: render saved address in multi-line layout, list current cart items with quantity, unit price, and computed line total, show order total matching cart subtotal (shipping stays FREE), and provide Back navigation to Step 1 without clearing saved address. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "summary": "Implement Step 3 (Payment) with selectable demo payment option(s) and a final “Pay & Place Order” action that calls the backend checkout capability and navigates to /order-confirmation/$orderId on success (no real payment gateway).",
+      "acceptanceCriteria": [
+        "The payment step requires selecting a payment option before placing the order.",
+        "Clicking “Pay & Place Order” creates the order and navigates to the existing order confirmation route (/order-confirmation/$orderId) on success.",
+        "Backend stores the payment option chosen on the order record (so it can be shown later if needed).",
+        "No external payment providers are used."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Add Step 3 (Payment): provide at least one selectable payment option (e.g., Cash on Delivery, UPI (demo)), require selection before enabling “Pay & Place Order”, and on submit call the existing checkout mutation with the saved address and chosen payment method; on success navigate to /order-confirmation/$orderId. Handle backend errors with clear English messaging. Verify the component's usage instructions before implementing."
+        },
+        {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "On successful completion of the admin bootstrap mutation, immediately invalidate/refetch role-derived queries (at minimum the ['currentUserRole'] query used by useCurrentUser) so admin-gated UI updates without a full refresh. Use the authorization component guidance for clearing/refreshing cached auth-related data when privilege changes; verify the component's usage instructions before implementing."
+          "description": "Update the checkout mutation to accept parameters for address string and payment method string (and optional message as needed) and pass them to the backend checkout capability; keep cart/orders query invalidation on success. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "summary": "Display all product, cart, checkout, and order totals in INR formatting across the storefront, product details, cart, checkout flow, and orders list (remove “$” formatting).",
+      "acceptanceCriteria": [
+        "ProductCard price display uses INR formatting (e.g., ₹1,999) instead of “$xx.xx”.",
+        "ProductDetailsPage price and strike-through price use INR formatting.",
+        "CartPage item prices and order summary totals use INR formatting.",
+        "OrdersPage order total uses INR formatting.",
+        "No “$” currency symbol remains in these user-facing price locations."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/currency.ts",
+          "operation": "create",
+          "description": "Create a small currency formatting utility (e.g., formatINR) using Intl.NumberFormat with INR so all price rendering is consistent and centralized."
         },
         {
-          "path": "frontend/src/hooks/useCurrentUser.ts",
+          "path": "frontend/src/components/marketplace/ProductCard.tsx",
           "operation": "modify",
-          "description": "Ensure the current-user role query is keyed consistently (and, if helpful, centralize/export the role query key) so it can be reliably invalidated after bootstrap and so dependent UI (header/admin menu/admin page gating) re-renders promptly. Use the authorization component’s role-check pattern (isCallerAdmin) consistently; verify the component's usage instructions before implementing."
+          "description": "Replace $-based formatting with the shared INR formatter for price and strike-through price in ProductCard. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/AdminSellerPage.tsx",
+          "path": "frontend/src/pages/ProductDetailsPage.tsx",
           "operation": "modify",
-          "description": "After a successful bootstrap action, ensure the /admin view transitions from the non-admin message to the Product Management UI within the same session by relying on the refreshed role state (no full page reload). Use the authorization component’s role-based gating behavior for this transition; verify the component's usage instructions before implementing."
+          "description": "Replace $-based formatting with the shared INR formatter for main price and strike-through price on the product details page. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CartPage.tsx",
+          "operation": "modify",
+          "description": "Replace $-based formatting with the shared INR formatter for item prices and order summary totals (subtotal/total) on the cart page. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/OrdersPage.tsx",
+          "operation": "modify",
+          "description": "Replace $-based formatting with the shared INR formatter for order totals in the orders list. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Ensure all prices shown in Step 2 (Review) and any totals in Step 3 (Payment) use the shared INR formatter and do not show “$”. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "summary": "Add routing and navigation required for the new checkout flow while keeping existing cart and order confirmation routes working, and ensure checkout requires sign-in consistent with current behavior.",
+      "acceptanceCriteria": [
+        "A new checkout route (or routes) is added to the TanStack Router configuration (frontend/src/App.tsx).",
+        "The existing /cart route still renders the cart page and provides a clear path into checkout.",
+        "The existing /order-confirmation/$orderId route continues to work without regressions.",
+        "Checkout requires sign-in (consistent with the current behavior of requiring sign-in before placing an order)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Register a new /checkout route in the TanStack Router configuration and wire it to the new CheckoutPage component, without changing the existing /cart or /order-confirmation/$orderId routes. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "Wrap checkout content with the existing RequireAuth pattern (or otherwise block the checkout flow until authenticated) to ensure sign-in is required before proceeding. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CartPage.tsx",
+          "operation": "modify",
+          "description": "Ensure /cart still renders normally and provides a clear navigation path into /checkout; preserve the current sign-in prompt behavior before allowing checkout. Verify the component's usage instructions before implementing."
         }
       ]
     }

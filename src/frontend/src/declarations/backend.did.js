@@ -39,6 +39,7 @@ export const Order = IDL.Record({
   'status' : OrderStatus,
   'total' : IDL.Float64,
   'userId' : IDL.Principal,
+  'address' : IDL.Opt(IDL.Text),
   'items' : IDL.Vec(CartItem),
 });
 
@@ -52,7 +53,11 @@ export const idlService = IDL.Service({
   'addToCart' : IDL.Func([IDL.Int, IDL.Int], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
-  'checkout' : IDL.Func([], [IDL.Int], []),
+  'checkout' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+      [IDL.Int],
+      [],
+    ),
   'clearCart' : IDL.Func([], [], []),
   'createCategories' : IDL.Func([IDL.Vec(Category)], [], []),
   'createInitialMarketplace' : IDL.Func(
@@ -119,6 +124,7 @@ export const idlFactory = ({ IDL }) => {
     'status' : OrderStatus,
     'total' : IDL.Float64,
     'userId' : IDL.Principal,
+    'address' : IDL.Opt(IDL.Text),
     'items' : IDL.Vec(CartItem),
   });
   
@@ -132,7 +138,11 @@ export const idlFactory = ({ IDL }) => {
     'addToCart' : IDL.Func([IDL.Int, IDL.Int], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'bootstrapAdmin' : IDL.Func([IDL.Text, IDL.Text], [], []),
-    'checkout' : IDL.Func([], [IDL.Int], []),
+    'checkout' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Int],
+        [],
+      ),
     'clearCart' : IDL.Func([], [], []),
     'createCategories' : IDL.Func([IDL.Vec(Category)], [], []),
     'createInitialMarketplace' : IDL.Func(

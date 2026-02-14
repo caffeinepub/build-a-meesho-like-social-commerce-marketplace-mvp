@@ -5,9 +5,11 @@ import AppLayout from './components/layout/AppLayout';
 import StorefrontPage from './pages/StorefrontPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import AdminSellerPage from './pages/AdminSellerPage';
+import ProfilePage from './pages/ProfilePage';
 
 const rootRoute = createRootRoute({
   component: AppLayout,
@@ -31,6 +33,12 @@ const cartRoute = createRoute({
   component: CartPage,
 });
 
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/checkout',
+  component: CheckoutPage,
+});
+
 const ordersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/orders',
@@ -49,13 +57,21 @@ const adminRoute = createRoute({
   component: AdminSellerPage,
 });
 
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  component: ProfilePage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   productRoute,
   cartRoute,
+  checkoutRoute,
   ordersRoute,
   orderConfirmationRoute,
   adminRoute,
+  profileRoute,
 ]);
 
 const router = createRouter({ routeTree });
@@ -68,7 +84,7 @@ declare module '@tanstack/react-router' {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <RouterProvider router={router} />
       <Toaster />
     </ThemeProvider>

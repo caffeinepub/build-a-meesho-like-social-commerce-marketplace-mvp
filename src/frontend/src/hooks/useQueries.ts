@@ -138,9 +138,13 @@ export function useCheckout() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data?: { address?: string; paymentMethod?: string; message?: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.checkout();
+      return actor.checkout(
+        data?.address || null,
+        data?.paymentMethod || null,
+        data?.message || null
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -227,7 +231,7 @@ export function useInitializeMarketplace() {
           id: BigInt(0),
           title: 'Stylish Summer Dress',
           description: 'Comfortable and trendy summer dress perfect for any occasion',
-          price: 29.99,
+          price: 2499,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
         },
@@ -235,7 +239,7 @@ export function useInitializeMarketplace() {
           id: BigInt(1),
           title: 'Wireless Earbuds',
           description: 'High-quality sound with noise cancellation',
-          price: 49.99,
+          price: 3999,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400',
         },
@@ -243,7 +247,7 @@ export function useInitializeMarketplace() {
           id: BigInt(2),
           title: 'Cotton T-Shirt',
           description: 'Soft and breathable cotton t-shirt',
-          price: 15.99,
+          price: 799,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
         },
@@ -251,7 +255,7 @@ export function useInitializeMarketplace() {
           id: BigInt(3),
           title: 'Smart Watch',
           description: 'Track your fitness and stay connected',
-          price: 199.99,
+          price: 15999,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
         },
@@ -259,7 +263,7 @@ export function useInitializeMarketplace() {
           id: BigInt(4),
           title: 'Kitchen Blender',
           description: 'Powerful blender for smoothies and more',
-          price: 79.99,
+          price: 6499,
           category: 'Home & Kitchen',
           imageUrl: 'https://images.unsplash.com/photo-1585515320310-259814833e62?w=400',
         },
@@ -267,7 +271,7 @@ export function useInitializeMarketplace() {
           id: BigInt(5),
           title: 'Face Cream',
           description: 'Moisturizing face cream for all skin types',
-          price: 24.99,
+          price: 1999,
           category: 'Beauty',
           imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400',
         },
@@ -275,7 +279,7 @@ export function useInitializeMarketplace() {
           id: BigInt(6),
           title: 'Yoga Mat',
           description: 'Non-slip yoga mat for your workout',
-          price: 34.99,
+          price: 2799,
           category: 'Sports',
           imageUrl: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400',
         },
@@ -283,7 +287,7 @@ export function useInitializeMarketplace() {
           id: BigInt(7),
           title: 'Denim Jeans',
           description: 'Classic fit denim jeans',
-          price: 45.99,
+          price: 3699,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
         },
@@ -291,7 +295,7 @@ export function useInitializeMarketplace() {
           id: BigInt(8),
           title: 'Bluetooth Speaker',
           description: 'Portable speaker with amazing sound',
-          price: 59.99,
+          price: 4799,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400',
         },
@@ -299,7 +303,7 @@ export function useInitializeMarketplace() {
           id: BigInt(9),
           title: 'Coffee Maker',
           description: 'Brew perfect coffee every morning',
-          price: 89.99,
+          price: 7299,
           category: 'Home & Kitchen',
           imageUrl: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400',
         },
@@ -307,7 +311,7 @@ export function useInitializeMarketplace() {
           id: BigInt(10),
           title: 'Lipstick Set',
           description: 'Set of 5 vibrant lipstick shades',
-          price: 19.99,
+          price: 1599,
           category: 'Beauty',
           imageUrl: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400',
         },
@@ -315,7 +319,7 @@ export function useInitializeMarketplace() {
           id: BigInt(11),
           title: 'Running Shoes',
           description: 'Comfortable running shoes for athletes',
-          price: 69.99,
+          price: 5699,
           category: 'Sports',
           imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
         },

@@ -1,52 +1,43 @@
-import { Link } from '@tanstack/react-router';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from '@tanstack/react-router';
 import type { Product } from '@/backend';
+import { formatINR } from '@/utils/currency';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const discount = Math.floor(Math.random() * 30) + 10; // Mock discount for visual appeal
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate({ to: '/product/$productId', params: { productId: product.id.toString() } });
+  };
 
   return (
-    <Link
-      to="/product/$productId"
-      params={{ productId: product.id.toString() }}
-      className="group"
+    <Card
+      className="overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1"
+      onClick={handleClick}
     >
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-        <div className="relative aspect-square overflow-hidden bg-muted">
-          <img
-            src={product.imageUrl}
-            alt={product.title}
-            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
-          {discount && (
-            <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
-              {discount}% OFF
-            </Badge>
-          )}
+      <div className="aspect-square overflow-hidden bg-muted">
+        <img
+          src={product.imageUrl}
+          alt={product.title}
+          className="w-full h-full object-cover transition-transform hover:scale-105"
+        />
+      </div>
+      <CardContent className="p-4 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold line-clamp-2 flex-1">{product.title}</h3>
+          <Badge variant="secondary" className="shrink-0">
+            {product.category}
+          </Badge>
         </div>
-        <CardContent className="p-3 space-y-1">
-          <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
-            {product.title}
-          </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-primary">
-              ${product.price.toFixed(2)}
-            </span>
-            {discount && (
-              <span className="text-xs text-muted-foreground line-through">
-                ${(product.price * (1 + discount / 100)).toFixed(2)}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">{product.category}</p>
-        </CardContent>
-      </Card>
-    </Link>
+        <p className="text-lg font-bold text-primary">
+          {formatINR(product.price)}
+        </p>
+      </CardContent>
+    </Card>
   );
 }

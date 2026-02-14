@@ -2,12 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-frontend-ui-path-for-a-signed-in-non-admin-user-to-trigger-the-admin-bootstrap-action-and-receive-clear-feedback-this-must-be-accessible-from-the-existing-non-admin-experience-e-g-on-the-admin-access-restricted-page-and-or-account-menu-and-must-display-all-user-facing-text-in-english",
-      "featureTitle": "Add a frontend UI path for a signed-in non-admin user to trigger the admin bootstrap action and receive clear feedback. This must be accessible from the existing non-admin experience (e.g., on the /admin access-restricted page and/or account menu) and must display all user-facing text in English.",
+      "featureId": "feature-add-a-simplified-3-step-checkout-flow-starting-from-the-cart-page-step-1-collects-a-delivery-address-full-name-mobile-number-pincode-address-line-1-address-line-2-optional-landmark-optional-city-state-and-requires-the-user-to-click-save-address-before-continuing",
+      "featureTitle": "Add a simplified 3-step checkout flow starting from the Cart page: Step 1 collects a delivery address (full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state) and requires the user to click “Save address” before continuing.",
       "files": [
-        "frontend/src/components/auth/AuthControls.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/AdminSellerPage.tsx"
+        "frontend/src/pages/CartPage.tsx",
+        "frontend/src/pages/CheckoutPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,17 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-12"
+        "REQ-18"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-frontend-refreshes-cached-auth-role-state-immediately-after-the-admin-bootstrap-action-completes-so-admin-gated-ui-updates-correctly-e-g-invalidate-refetch-the-current-user-role-query-and-any-other-dependent-queries",
-      "featureTitle": "Ensure the frontend refreshes cached auth/role state immediately after the admin bootstrap action completes so admin-gated UI updates correctly (e.g., invalidate/refetch the current user role query and any other dependent queries).",
+      "featureId": "feature-implement-an-order-review-step-step-2-that-shows-the-saved-delivery-address-and-the-current-cart-items-with-quantities-and-line-totals-plus-an-order-total-before-the-user-proceeds-to-payment",
+      "featureTitle": "Implement an order review step (Step 2) that shows the saved delivery address and the current cart items with quantities and line totals, plus an order total, before the user proceeds to payment.",
       "files": [
-        "frontend/src/hooks/useCurrentUser.ts",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/AdminSellerPage.tsx"
+        "frontend/src/pages/CheckoutPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,7 +36,72 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-13"
+        "REQ-19"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-a-simple-payment-step-step-3-with-at-least-one-selectable-payment-option-e-g-cash-on-delivery-and-or-upi-demo-and-a-final-pay-place-order-action-that-completes-the-order-without-integrating-any-real-payment-gateway",
+      "featureTitle": "Implement a simple payment step (Step 3) with at least one selectable payment option (e.g., “Cash on Delivery” and/or “UPI (demo)”) and a final “Pay & Place Order” action that completes the order without integrating any real payment gateway.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CheckoutPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-20"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-display-all-product-cart-and-order-totals-in-inr-indian-rupees-across-the-storefront-product-cards-product-details-page-cart-page-checkout-flow-and-orders-list-remove-formatting-in-these-places",
+      "featureTitle": "Display all product, cart, and order totals in INR (Indian Rupees) across the storefront product cards, product details page, cart page, checkout flow, and orders list; remove “$” formatting in these places.",
+      "files": [
+        "frontend/src/components/marketplace/ProductCard.tsx",
+        "frontend/src/pages/CartPage.tsx",
+        "frontend/src/pages/CheckoutPage.tsx",
+        "frontend/src/pages/OrdersPage.tsx",
+        "frontend/src/pages/ProductDetailsPage.tsx",
+        "frontend/src/utils/currency.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-22"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-routing-and-navigation-needed-for-the-simplified-checkout-flow-new-checkout-route-s-keeping-the-existing-cart-and-order-confirmation-routes-working",
+      "featureTitle": "Add routing and navigation needed for the simplified checkout flow (new checkout route(s)), keeping the existing cart and order confirmation routes working.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/CartPage.tsx",
+        "frontend/src/pages/CheckoutPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-23"
       ],
       "confidence": "high"
     }

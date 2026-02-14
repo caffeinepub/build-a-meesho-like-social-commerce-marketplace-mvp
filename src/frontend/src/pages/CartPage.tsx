@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useCart, useUpdateCartQuantity, useRemoveFromCart } from '@/hooks/useCart';
-import { useCheckout } from '@/hooks/useQueries';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatINR } from '@/utils/currency';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -14,22 +14,15 @@ export default function CartPage() {
   const { cartItems, isLoading, error, subtotal } = useCart();
   const updateQuantity = useUpdateCartQuantity();
   const removeFromCart = useRemoveFromCart();
-  const checkout = useCheckout();
 
-  const handleCheckout = async () => {
+  const handleProceedToCheckout = async () => {
     if (!identity) {
-      toast.error('Please sign in to place an order');
+      toast.error('Please sign in to proceed to checkout');
       await login();
       return;
     }
 
-    try {
-      const orderId = await checkout.mutateAsync();
-      toast.success('Order placed successfully!');
-      navigate({ to: '/order-confirmation/$orderId', params: { orderId: orderId.toString() } });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to place order');
-    }
+    navigate({ to: '/checkout' });
   };
 
   if (isLoading) {
@@ -92,7 +85,7 @@ export default function CartPage() {
                     <h3 className="font-semibold">{item.product.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.product.category}</p>
                     <p className="text-lg font-bold text-primary">
-                      ${item.product.price.toFixed(2)}
+                      {formatINR(item.product.price)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end justify-between">
@@ -150,7 +143,7 @@ export default function CartPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                  <span className="font-semibold">{formatINR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
@@ -158,16 +151,15 @@ export default function CartPage() {
                 </div>
                 <div className="border-t pt-2 flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">${subtotal.toFixed(2)}</span>
+                  <span className="text-primary">{formatINR(subtotal)}</span>
                 </div>
               </div>
               <Button
                 size="lg"
                 className="w-full"
-                onClick={handleCheckout}
-                disabled={checkout.isPending}
+                onClick={handleProceedToCheckout}
               >
-                {checkout.isPending ? 'Processing...' : 'Place Order'}
+                Proceed to Checkout
               </Button>
             </CardContent>
           </Card>

@@ -24,6 +24,7 @@ export interface Order {
     status: OrderStatus;
     total: number;
     userId: Principal;
+    address?: string;
     items: Array<CartItem>;
 }
 export interface Category {
@@ -50,7 +51,7 @@ export interface backendInterface {
     addToCart(productId: bigint, quantity: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(adminToken: string, userProvidedToken: string): Promise<void>;
-    checkout(): Promise<bigint>;
+    checkout(address: string | null, paymentMethod: string | null, message: string | null): Promise<bigint>;
     clearCart(): Promise<void>;
     createCategories(categories: Array<Category>): Promise<void>;
     createInitialMarketplace(products: Array<Product>, categories: Array<Category>): Promise<boolean>;

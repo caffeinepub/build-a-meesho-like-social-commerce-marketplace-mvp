@@ -1,7 +1,7 @@
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut, User, ShoppingBag, Shield } from 'lucide-react';
+import { LogIn, LogOut, User, ShoppingBag, Shield, UserCircle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNavigate } from '@tanstack/react-router';
 import {
@@ -43,6 +43,10 @@ export default function AuthControls() {
     navigate({ to: '/admin' });
   };
 
+  const handleProfileClick = () => {
+    navigate({ to: '/profile' });
+  };
+
   if (!isAuthenticated) {
     return (
       <Button
@@ -69,6 +73,11 @@ export default function AuthControls() {
         <DropdownMenuLabel>
           {userProfile?.name || 'My Account'}
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleProfileClick} className="gap-2">
+          <UserCircle className="h-4 w-4" />
+          Profile
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {isAdmin ? (
           <>

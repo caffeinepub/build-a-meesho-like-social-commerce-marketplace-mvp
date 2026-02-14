@@ -1,14 +1,18 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
+  "projectStateVersion": 11,
   "summary": "Plan to build a Meesho-like e-commerce marketplace website.",
   "architectural_notes": [
-    "Admin access is controlled per-user (Internet Identity principal) and gates visibility/access to Product Management (/admin)."
+    "Admin access is controlled per-user (Internet Identity principal) and gates visibility/access to Product Management (/admin).",
+    "Add a user-facing Profile/Account area that can display the current authenticated Internet Identity principal and admin status for support/debugging (since admin access is principal-based and the UI currently doesn’t surface it).",
+    "Checkout should capture and persist a shipping address (name, mobile, pincode, address lines, landmark, city, state) for order placement and display it in the order summary."
   ],
   "known_issues": [
-    "Attempt to set the user's account as admin failed due to a build/deploy error ('AI was unable to complete your request')."
+    "Attempt to set the user's account as admin failed due to a build/deploy error ('AI was unable to complete your request').",
+    "After publishing, user cannot see admin panel or previously added products; attempting admin bootstrap returns 'An admin already exists. Please contact the existing administrator for access' and the UI does not expose Principal ID or a profile page to diagnose identity/admin mapping.",
+    "Build failed when attempting to implement the expanded checkout flow (address capture + order summary + payment step + INR pricing)."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-create-a-responsive-marketplace-storefront-with-key-shopping-flows-inspired-by-meesho-browse-categories-view-product-grid-open-product-details-add-remove-items-in-cart-and-place-an-order-no-external-payment-integration",
@@ -89,6 +93,78 @@
         "REQ-13"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-a-new-authenticated-profile-account-page-route-that-is-accessible-in-the-app-ui-and-displays-the-signed-in-user-s-details",
+      "title": "Add a new authenticated Profile/Account page route that is accessible in the app UI and displays the signed-in user’s details.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-profile-account-page-display-the-user-s-identity-and-account-details-needed-for-troubleshooting-admin-access-including-internet-identity-principal-id-current-profile-name-and-admin-status",
+      "title": "On the Profile/Account page, display the user’s identity and account details needed for troubleshooting admin access, including Internet Identity Principal ID, current profile name, and admin status.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-allow-the-signed-in-user-to-update-their-profile-name-from-the-profile-account-page-using-the-existing-savecalleruserprofile-flow",
+      "title": "Allow the signed-in user to update their profile name from the Profile/Account page using the existing saveCallerUserProfile flow.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-authenticated-account-dropdown-menu-to-include-navigation-to-the-new-profile-account-page-without-breaking-existing-admin-product-management-and-sign-out-actions",
+      "title": "Update the authenticated account dropdown/menu to include navigation to the new Profile/Account page without breaking existing Admin/Product Management and Sign Out actions.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-simplified-3-step-checkout-flow-starting-from-the-cart-page-step-1-collects-a-delivery-address-full-name-mobile-number-pincode-address-line-1-address-line-2-optional-landmark-optional-city-state-and-requires-the-user-to-click-save-address-before-continuing",
+      "title": "Add a simplified 3-step checkout flow starting from the Cart page: Step 1 collects a delivery address (full name, mobile number, pincode, address line 1, address line 2 (optional), landmark (optional), city, state) and requires the user to click “Save address” before continuing.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-order-review-step-step-2-that-shows-the-saved-delivery-address-and-the-current-cart-items-with-quantities-and-line-totals-plus-an-order-total-before-the-user-proceeds-to-payment",
+      "title": "Implement an order review step (Step 2) that shows the saved delivery address and the current cart items with quantities and line totals, plus an order total, before the user proceeds to payment.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-simple-payment-step-step-3-with-at-least-one-selectable-payment-option-e-g-cash-on-delivery-and-or-upi-demo-and-a-final-pay-place-order-action-that-completes-the-order-without-integrating-any-real-payment-gateway",
+      "title": "Implement a simple payment step (Step 3) with at least one selectable payment option (e.g., “Cash on Delivery” and/or “UPI (demo)”) and a final “Pay & Place Order” action that completes the order without integrating any real payment gateway.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-all-product-cart-and-order-totals-in-inr-indian-rupees-across-the-storefront-product-cards-product-details-page-cart-page-checkout-flow-and-orders-list-remove-formatting-in-these-places",
+      "title": "Display all product, cart, and order totals in INR (Indian Rupees) across the storefront product cards, product details page, cart page, checkout flow, and orders list; remove “$” formatting in these places.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-routing-and-navigation-needed-for-the-simplified-checkout-flow-new-checkout-route-s-keeping-the-existing-cart-and-order-confirmation-routes-working",
+      "title": "Add routing and navigation needed for the simplified checkout flow (new checkout route(s)), keeping the existing cart and order confirmation routes working.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -125,6 +201,44 @@
       "summary": "Add a backend method that lets the currently authenticated caller become an admin when (and only when) no admin has been set up yet (admin bootstrap). The method must grant the caller admin privileges in the existing access control system and return a clear success/failure result (or trap with a clear English error message).",
       "reqIds": [
         "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add a Profile/Account section in the app that displays the signed-in user’s identity details (e.g., Internet Identity Principal ID and related auth/admin status) so users can confirm which identity is logged in and troubleshoot admin access.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Add a simplified checkout flow that collects a full delivery address after cart (name, mobile, pincode, address line 1/2, landmark, city, state) and allows saving it before placing an order.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add an order summary/preview step that displays the saved delivery address and the cart items with prices before confirming the order.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Add a simple payment step/option at checkout (no real payment gateway) to complete the order after the order summary.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Display product and order prices in INR (Indian Rupees) across storefront, cart, and checkout.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Extend the backend order model and checkout API to persist the delivery address with each order created from the new checkout flow.",
+      "reqIds": [
+        "REQ-21"
       ],
       "status": "pending"
     }

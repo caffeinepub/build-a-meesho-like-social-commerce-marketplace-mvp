@@ -17,6 +17,7 @@ export interface Order {
   'status' : OrderStatus,
   'total' : number,
   'userId' : Principal,
+  'address' : [] | [string],
   'items' : Array<CartItem>,
 }
 export type OrderStatus = { 'shipped' : null } |
@@ -42,7 +43,10 @@ export interface _SERVICE {
   'addToCart' : ActorMethod<[bigint, bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bootstrapAdmin' : ActorMethod<[string, string], undefined>,
-  'checkout' : ActorMethod<[], bigint>,
+  'checkout' : ActorMethod<
+    [[] | [string], [] | [string], [] | [string]],
+    bigint
+  >,
   'clearCart' : ActorMethod<[], undefined>,
   'createCategories' : ActorMethod<[Array<Category>], undefined>,
   'createInitialMarketplace' : ActorMethod<
