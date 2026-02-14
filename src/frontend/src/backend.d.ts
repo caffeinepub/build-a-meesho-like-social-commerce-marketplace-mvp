@@ -11,6 +11,7 @@ export interface Product {
     id: bigint;
     title: string;
     description: string;
+    stock: bigint;
     imageUrl: string;
     category: string;
     price: number;
@@ -49,7 +50,7 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
-    addProduct(title: string, description: string, price: number, category: string, imageUrl: string): Promise<bigint>;
+    addProduct(title: string, description: string, price: number, category: string, imageUrl: string, stock: bigint): Promise<bigint>;
     addToCart(productId: bigint, quantity: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(_adminToken: string, _userProvidedToken: string): Promise<void>;
@@ -58,7 +59,7 @@ export interface backendInterface {
     createCategories(categories: Array<Category>): Promise<void>;
     createInitialMarketplace(products: Array<Product>, categories: Array<Category>): Promise<boolean>;
     deleteProduct(id: bigint): Promise<void>;
-    editProduct(id: bigint, title: string, description: string, price: number, category: string, imageUrl: string): Promise<void>;
+    editProduct(id: bigint, title: string, description: string, price: number, category: string, imageUrl: string, stock: bigint): Promise<void>;
     getAllCategories(): Promise<Array<Category>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllProductsSortedById(): Promise<Array<Product>>;
@@ -67,10 +68,12 @@ export interface backendInterface {
     getCart(): Promise<Array<CartItem>>;
     getOrders(): Promise<Array<Order>>;
     getProduct(id: bigint): Promise<Product>;
+    getProductStock(productId: bigint): Promise<bigint>;
     getProductsByCategory(category: string): Promise<Array<Product>>;
     getProductsByCategorySortedByPrice(category: string): Promise<Array<Product>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateOrderStatus(orderId: bigint, newStatus: OrderStatus): Promise<void>;
+    updateProductStock(productId: bigint, newStock: bigint): Promise<void>;
 }

@@ -93,6 +93,7 @@ export interface Product {
     id: bigint;
     title: string;
     description: string;
+    stock: bigint;
     imageUrl: string;
     category: string;
     price: number;
@@ -132,7 +133,7 @@ export enum UserRole {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
-    addProduct(title: string, description: string, price: number, category: string, imageUrl: string): Promise<bigint>;
+    addProduct(title: string, description: string, price: number, category: string, imageUrl: string, stock: bigint): Promise<bigint>;
     addToCart(productId: bigint, quantity: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(_adminToken: string, _userProvidedToken: string): Promise<void>;
@@ -141,7 +142,7 @@ export interface backendInterface {
     createCategories(categories: Array<Category>): Promise<void>;
     createInitialMarketplace(products: Array<Product>, categories: Array<Category>): Promise<boolean>;
     deleteProduct(id: bigint): Promise<void>;
-    editProduct(id: bigint, title: string, description: string, price: number, category: string, imageUrl: string): Promise<void>;
+    editProduct(id: bigint, title: string, description: string, price: number, category: string, imageUrl: string, stock: bigint): Promise<void>;
     getAllCategories(): Promise<Array<Category>>;
     getAllOrders(): Promise<Array<Order>>;
     getAllProductsSortedById(): Promise<Array<Product>>;
@@ -150,12 +151,14 @@ export interface backendInterface {
     getCart(): Promise<Array<CartItem>>;
     getOrders(): Promise<Array<Order>>;
     getProduct(id: bigint): Promise<Product>;
+    getProductStock(productId: bigint): Promise<bigint>;
     getProductsByCategory(category: string): Promise<Array<Product>>;
     getProductsByCategorySortedByPrice(category: string): Promise<Array<Product>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateOrderStatus(orderId: bigint, newStatus: OrderStatus): Promise<void>;
+    updateProductStock(productId: bigint, newStock: bigint): Promise<void>;
 }
 import type { CartItem as _CartItem, Order as _Order, OrderStatus as _OrderStatus, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -174,17 +177,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addProduct(arg0: string, arg1: string, arg2: number, arg3: string, arg4: string): Promise<bigint> {
+    async addProduct(arg0: string, arg1: string, arg2: number, arg3: string, arg4: string, arg5: bigint): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.addProduct(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.addProduct(arg0, arg1, arg2, arg3, arg4, arg5);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addProduct(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.addProduct(arg0, arg1, arg2, arg3, arg4, arg5);
             return result;
         }
     }
@@ -300,17 +303,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async editProduct(arg0: bigint, arg1: string, arg2: string, arg3: number, arg4: string, arg5: string): Promise<void> {
+    async editProduct(arg0: bigint, arg1: string, arg2: string, arg3: number, arg4: string, arg5: string, arg6: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.editProduct(arg0, arg1, arg2, arg3, arg4, arg5);
+                const result = await this.actor.editProduct(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.editProduct(arg0, arg1, arg2, arg3, arg4, arg5);
+            const result = await this.actor.editProduct(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
             return result;
         }
     }
@@ -426,6 +429,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getProductStock(arg0: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getProductStock(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getProductStock(arg0);
+            return result;
+        }
+    }
     async getProductsByCategory(arg0: string): Promise<Array<Product>> {
         if (this.processError) {
             try {
@@ -507,6 +524,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateOrderStatus(arg0, to_candid_OrderStatus_n13(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async updateProductStock(arg0: bigint, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateProductStock(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateProductStock(arg0, arg1);
             return result;
         }
     }

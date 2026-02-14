@@ -5,9 +5,10 @@ import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Order "mo:core/Order";
 import Float "mo:core/Float";
-import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
 import Migration "migration";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
@@ -26,6 +27,7 @@ actor {
     price : Float;
     category : Text;
     imageUrl : Text;
+    stock : Int;
   };
 
   public type Category = {
@@ -122,7 +124,7 @@ actor {
   };
 
   // Marketplace API
-  public shared ({ caller }) func addProduct(title : Text, description : Text, price : Float, category : Text, imageUrl : Text) : async Int {
+  public shared ({ caller }) func addProduct(title : Text, description : Text, price : Float, category : Text, imageUrl : Text, stock : Int) : async Int {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admin can add products");
     };
@@ -134,6 +136,7 @@ actor {
       price;
       category;
       imageUrl;
+      stock;
     };
     (marketplaceData.products).add(productId, newProduct);
     marketplaceData := {
@@ -144,7 +147,7 @@ actor {
     productId;
   };
 
-  public shared ({ caller }) func editProduct(id : Int, title : Text, description : Text, price : Float, category : Text, imageUrl : Text) : async () {
+  public shared ({ caller }) func editProduct(id : Int, title : Text, description : Text, price : Float, category : Text, imageUrl : Text, stock : Int) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admin can edit products");
     };
@@ -155,6 +158,7 @@ actor {
       price;
       category;
       imageUrl;
+      stock;
     };
     switch (marketplaceData.products.get(id)) {
       case (null) {
@@ -269,7 +273,7 @@ actor {
     };
     await createCategories(categories);
     for (product in products.values()) {
-      let _ = await addProduct(product.title, product.description, product.price, product.category, product.imageUrl);
+      let _ = await addProduct(product.title, product.description, product.price, product.category, product.imageUrl, product.stock);
     };
     true;
   };
@@ -281,7 +285,12 @@ actor {
     };
     switch (marketplaceData.products.get(productId)) {
       case (null) { Runtime.trap("Product not found: " # productId.toText()) };
-      case (?_) {
+      case (?product) {
+        if (quantity > product.stock) {
+          Runtime.trap(
+            "Requested quantity exceeds available stock for product " # productId.toText() # ". " # "Available stock: " # product.stock.toText()
+          );
+        };
         switch (marketplaceData.carts.get(caller)) {
           case (null) {
             (marketplaceData.carts).add(caller, [{
@@ -403,5 +412,31 @@ actor {
       );
     };
     adminBootstrapped := true;
+  };
+
+  // Inventory Management
+  // Update product stock (admin only)
+  public shared ({ caller }) func updateProductStock(productId : Int, newStock : Int) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admin can update product stock");
+    };
+    let product = switch (marketplaceData.products.get(productId)) {
+      case (null) { Runtime.trap("Product not found: " # productId.toText()) };
+      case (?p) { p };
+    };
+
+    let updatedProduct : Product = {
+      product with stock = newStock;
+    };
+
+    (marketplaceData.products).add(productId, updatedProduct);
+  };
+
+  // Get product stock (public)
+  public query func getProductStock(productId : Int) : async Int {
+    switch (marketplaceData.products.get(productId)) {
+      case (null) { Runtime.trap("Product not found: " # productId.toText()) };
+      case (?product) { product.stock };
+    };
   };
 };

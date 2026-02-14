@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import type { Product, Order, OrderStatus } from '@/backend';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import AdminProductManagementHelp from '@/components/admin/AdminProductManagementHelp';
+import AdminStockManagementSection from '@/components/admin/AdminStockManagementSection';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { formatINR } from '@/utils/currency';
@@ -107,6 +108,7 @@ function AdminContent() {
         <TabsList>
           <TabsTrigger value="products">Product Management</TabsTrigger>
           <TabsTrigger value="orders">Order Management</TabsTrigger>
+          <TabsTrigger value="stock">Stock Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-6">
@@ -158,6 +160,14 @@ function AdminContent() {
         <TabsContent value="orders">
           <OrderManagement />
         </TabsContent>
+
+        <TabsContent value="stock">
+          {productsLoading ? (
+            <p>Loading products...</p>
+          ) : (
+            <AdminStockManagementSection products={products || []} />
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -206,31 +216,14 @@ function OrderManagement() {
     }
   };
 
-  const truncatePrincipal = (principal: string): string => {
-    if (principal.length <= 16) return principal;
-    return `${principal.slice(0, 8)}...${principal.slice(-8)}`;
-  };
-
   if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>Loading orders...</p>
-        </CardContent>
-      </Card>
-    );
+    return <p>Loading orders...</p>;
   }
 
   if (!orders || orders.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Order Management</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 text-center">
           <p className="text-muted-foreground">No orders yet</p>
         </CardContent>
       </Card>
@@ -238,81 +231,74 @@ function OrderManagement() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Order Management</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Delivery Address</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map((order) => {
-                const isPending = order.status === 'pending';
-                const isProcessing = updateOrderStatus.isPending;
-                
-                return (
-                  <TableRow key={order.id.toString()}>
-                    <TableCell className="font-medium">#{order.id.toString()}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {truncatePrincipal(order.userId.toString())}
-                    </TableCell>
-                    <TableCell>{order.items.length}</TableCell>
-                    <TableCell className="font-semibold">{formatINR(order.total)}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {order.address ? order.address.split('\n')[0] : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(order.status)}>
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {isPending ? (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleAccept(order.id)}
-                            disabled={isProcessing}
-                            className="gap-1"
-                          >
-                            <CheckCircle className="h-3 w-3" />
-                            Accept
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDecline(order.id)}
-                            disabled={isProcessing}
-                            className="gap-1"
-                          >
-                            <XCircle className="h-3 w-3" />
-                            Decline
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">No actions</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <Card key={order.id.toString()}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Order #{order.id.toString()}</CardTitle>
+              <Badge variant={getStatusVariant(order.status)}>
+                {order.status}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Customer</p>
+                <p className="font-mono text-sm">{order.userId.toString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total</p>
+                <p className="text-lg font-bold text-primary">{formatINR(order.total)}</p>
+              </div>
+            </div>
+
+            {order.address && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Delivery Address</p>
+                <p className="text-sm whitespace-pre-line">{order.address}</p>
+              </div>
+            )}
+
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Items</p>
+              <div className="space-y-1">
+                {order.items.map((item, idx) => (
+                  <div key={idx} className="text-sm flex justify-between">
+                    <span>Product ID: {item.productId.toString()}</span>
+                    <span>Quantity: {item.quantity.toString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {order.status === 'pending' && (
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={() => handleAccept(order.id)}
+                  disabled={updateOrderStatus.isPending}
+                  className="gap-2"
+                  variant="default"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Accept Order
+                </Button>
+                <Button
+                  onClick={() => handleDecline(order.id)}
+                  disabled={updateOrderStatus.isPending}
+                  className="gap-2"
+                  variant="destructive"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Decline Order
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
 
@@ -330,23 +316,45 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
     price: product?.price.toString() || '',
     category: product?.category || '',
     imageUrl: product?.imageUrl || '',
+    stock: product?.stock.toString() || '100',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const price = parseFloat(formData.price);
+    const stock = parseInt(formData.stock, 10);
+
+    if (isNaN(price) || price <= 0) {
+      toast.error('Please enter a valid price');
+      return;
+    }
+
+    if (isNaN(stock) || stock < 0) {
+      toast.error('Please enter a valid stock quantity (non-negative number)');
+      return;
+    }
+
     try {
       if (product) {
         await editProduct.mutateAsync({
           id: product.id,
-          ...formData,
-          price: parseFloat(formData.price),
+          title: formData.title,
+          description: formData.description,
+          price,
+          category: formData.category,
+          imageUrl: formData.imageUrl,
+          stock: BigInt(stock),
         });
         toast.success('Product updated successfully');
       } else {
         await addProduct.mutateAsync({
-          ...formData,
-          price: parseFloat(formData.price),
+          title: formData.title,
+          description: formData.description,
+          price,
+          category: formData.category,
+          imageUrl: formData.imageUrl,
+          stock: BigInt(stock),
         });
         toast.success('Product added successfully');
       }
@@ -358,7 +366,7 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
+      <div>
         <Label htmlFor="title">Title</Label>
         <Input
           id="title"
@@ -367,7 +375,8 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
           required
         />
       </div>
-      <div className="space-y-2">
+
+      <div>
         <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
@@ -376,9 +385,10 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
           required
         />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="price">Price</Label>
+        <div>
+          <Label htmlFor="price">Price (INR)</Label>
           <Input
             id="price"
             type="number"
@@ -388,17 +398,31 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
+
+        <div>
+          <Label htmlFor="stock">Stock Quantity</Label>
           <Input
-            id="category"
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            id="stock"
+            type="number"
+            min="0"
+            value={formData.stock}
+            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
             required
           />
         </div>
       </div>
-      <div className="space-y-2">
+
+      <div>
+        <Label htmlFor="category">Category</Label>
+        <Input
+          id="category"
+          value={formData.category}
+          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
         <Label htmlFor="imageUrl">Image URL</Label>
         <Input
           id="imageUrl"
@@ -408,17 +432,19 @@ function ProductForm({ product, onSuccess }: ProductFormProps) {
           required
         />
       </div>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={addProduct.isPending || editProduct.isPending}
-      >
-        {addProduct.isPending || editProduct.isPending
-          ? 'Saving...'
-          : product
+
+      <div className="flex justify-end gap-2">
+        <Button
+          type="submit"
+          disabled={addProduct.isPending || editProduct.isPending}
+        >
+          {addProduct.isPending || editProduct.isPending
+            ? 'Saving...'
+            : product
             ? 'Update Product'
             : 'Add Product'}
-      </Button>
+        </Button>
+      </div>
     </form>
   );
 }
@@ -432,7 +458,9 @@ function ProductTable({ products, onEdit }: ProductTableProps) {
   const deleteProduct = useDeleteProduct();
 
   const handleDelete = async (id: bigint) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
 
     try {
       await deleteProduct.mutateAsync(id);
@@ -442,48 +470,62 @@ function ProductTable({ products, onEdit }: ProductTableProps) {
     }
   };
 
+  if (products.length === 0) {
+    return <p className="text-muted-foreground">No products yet. Add your first product to get started.</p>;
+  }
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Title</TableHead>
+          <TableHead>Category</TableHead>
+          <TableHead>Price</TableHead>
+          <TableHead>Stock</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {products.map((product) => (
+          <TableRow key={product.id.toString()}>
+            <TableCell className="font-medium">{product.title}</TableCell>
+            <TableCell>{product.category}</TableCell>
+            <TableCell>{formatINR(product.price)}</TableCell>
+            <TableCell>
+              <span
+                className={`font-semibold ${
+                  Number(product.stock) === 0
+                    ? 'text-destructive'
+                    : Number(product.stock) < 10
+                    ? 'text-warning'
+                    : ''
+                }`}
+              >
+                {product.stock.toString()}
+              </span>
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(product)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(product.id)}
+                  disabled={deleteProduct.isPending}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id.toString()}>
-              <TableCell>{product.id.toString()}</TableCell>
-              <TableCell className="font-medium">{product.title}</TableCell>
-              <TableCell>{product.category}</TableCell>
-              <TableCell>{formatINR(product.price)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onEdit(product)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(product.id)}
-                    disabled={deleteProduct.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

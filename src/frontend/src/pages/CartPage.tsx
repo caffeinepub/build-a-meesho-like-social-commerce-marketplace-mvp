@@ -25,6 +25,42 @@ export default function CartPage() {
     navigate({ to: '/checkout' });
   };
 
+  const handleIncrement = async (item: typeof cartItems[0]) => {
+    const currentQty = Number(item.quantity);
+    const availableStock = Number(item.product.stock);
+    const newQuantity = currentQty + 1;
+
+    // Check if increment would exceed stock
+    if (newQuantity > availableStock) {
+      toast.error(`We have only ${availableStock} in stock at this moment.`);
+      return;
+    }
+
+    try {
+      await updateQuantity.mutateAsync({
+        productId: item.product.id,
+        quantity: BigInt(newQuantity),
+      });
+    } catch (error: any) {
+      // Backend will also enforce and return clear error messages
+      toast.error(error.message || 'Failed to update quantity');
+    }
+  };
+
+  const handleDecrement = async (item: typeof cartItems[0]) => {
+    const currentQty = Number(item.quantity);
+    if (currentQty <= 1) return;
+
+    try {
+      await updateQuantity.mutateAsync({
+        productId: item.product.id,
+        quantity: BigInt(currentQty - 1),
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update quantity');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -72,67 +108,68 @@ export default function CartPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item) => (
-            <Card key={item.product.id.toString()}>
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <img
-                    src={item.product.imageUrl}
-                    alt={item.product.title}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 space-y-2">
-                    <h3 className="font-semibold">{item.product.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.product.category}</p>
-                    <p className="text-lg font-bold text-primary">
-                      {formatINR(item.product.price)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end justify-between">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeFromCart.mutate(item.product.id)}
-                      disabled={removeFromCart.isPending}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    <div className="flex items-center gap-2">
+          {cartItems.map((item) => {
+            const currentQty = Number(item.quantity);
+            const availableStock = Number(item.product.stock);
+            const isAtMaxStock = currentQty >= availableStock;
+
+            return (
+              <Card key={item.product.id.toString()}>
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <img
+                      src={item.product.imageUrl}
+                      alt={item.product.title}
+                      className="w-24 h-24 object-cover rounded-lg"
+                    />
+                    <div className="flex-1 space-y-2">
+                      <h3 className="font-semibold">{item.product.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.product.category}</p>
+                      <p className="text-lg font-bold text-primary">
+                        {formatINR(item.product.price)}
+                      </p>
+                      {availableStock < 10 && (
+                        <p className="text-xs text-warning">
+                          Only {availableStock} left in stock
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end justify-between">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          updateQuantity.mutate({
-                            productId: item.product.id,
-                            quantity: BigInt(Math.max(1, Number(item.quantity) - 1)),
-                          })
-                        }
-                        disabled={Number(item.quantity) <= 1 || updateQuantity.isPending}
+                        onClick={() => removeFromCart.mutate(item.product.id)}
+                        disabled={removeFromCart.isPending}
                       >
-                        <Minus className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
-                      <span className="w-8 text-center font-semibold">{item.quantity.toString()}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          updateQuantity.mutate({
-                            productId: item.product.id,
-                            quantity: BigInt(Number(item.quantity) + 1),
-                          })
-                        }
-                        disabled={updateQuantity.isPending}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleDecrement(item)}
+                          disabled={currentQty <= 1 || updateQuantity.isPending}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center font-semibold">{currentQty}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleIncrement(item)}
+                          disabled={updateQuantity.isPending || isAtMaxStock}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Order Summary */}

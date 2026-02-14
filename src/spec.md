@@ -1,13 +1,15 @@
 # Specification
 
 ## Summary
-**Goal:** Let the seller/admin review newly placed customer orders and explicitly accept or decline them, with updated order status shown to buyers.
+**Goal:** Add admin-only inventory (stock) management per product and enforce stock limits across cart and checkout.
 
 **Planned changes:**
-- Extend the backend `OrderStatus` to include `accepted` and `declined`, while keeping `checkout(...)` creating `pending` orders.
-- Add admin-only backend APIs to (1) list all orders and (2) accept/decline a pending order, with clear English errors for non-admin access, missing orders, and invalid status transitions.
-- Add frontend React Query hooks for admin order listing and accept/decline mutations, including cache invalidation/refresh for both admin orders and the buyer `['orders']` query.
-- Add an admin-only “Order Management” section in `/admin` to view orders and accept/decline pending ones, with English success/error feedback and disabled duplicate submissions during mutation.
-- Update buyer `/orders` status badge display/styling to support `accepted` and `declined` consistently.
+- Extend the backend Product model to persist an integer stock quantity (non-negative) and expose it in existing product read APIs.
+- Add admin-only backend endpoints to set/update product stock with clear authorization and not-found error handling.
+- Enforce inventory limits in backend cart updates and checkout, returning clear English errors that include the available quantity; decrement stock on successful checkout without allowing stock to go below zero.
+- Add upgrade-safe handling/migration so existing products receive a deterministic default stock value after canister upgrades.
+- Add React Query hooks for stock-aware product fetching and admin stock updates, including cache invalidation/refetch after updates.
+- Add an admin-only “Stock” section in the existing admin page to view and update stock per product with pending-state controls and clear success/error feedback.
+- Update customer-facing Product Details, Cart, and Checkout UI to prevent exceeding stock and display clear English messages that include the available quantity.
 
-**User-visible outcome:** Admins can go to `/admin` to see an Order Management list and accept or decline pending orders; buyers see their order status update to accepted or declined in “My Orders.”
+**User-visible outcome:** Admins can view and update per-product stock quantities from the admin area, and customers are prevented from adding/buying quantities above available stock with clear messages showing current in-stock amounts.

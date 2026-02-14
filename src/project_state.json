@@ -1,13 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 15,
+  "projectStateVersion": 17,
   "summary": "Plan to build a Meesho-like e-commerce marketplace website.",
   "architectural_notes": [
     "Admin access is controlled per-user (Internet Identity principal) and gates visibility/access to Product Management (/admin).",
     "Add a user-facing Profile/Account area that can display the current authenticated Internet Identity principal and admin status for support/debugging (since admin access is principal-based and the UI currently doesn’t surface it).",
     "Checkout should capture and persist a shipping address (name, mobile, pincode, address lines, landmark, city, state) for order placement and display it in the order summary.",
     "Real payment gateway integrations (e.g., Razorpay/Paytm/PhonePe/Stripe/UPI) are not supported on the current platform; checkout payments must remain demo-only (e.g., COD/UPI demo) with a more realistic UI as needed.",
-    "Introduce order status states to support seller decisioning (e.g., Pending Seller Confirmation -> Accepted/Declined) and expose this in a seller-facing UI."
+    "Introduce order status states to support seller decisioning (e.g., Pending Seller Confirmation -> Accepted/Declined) and expose this in a seller-facing UI.",
+    "Introduce per-product stock quantity managed by admins only, and enforce stock constraints during cart updates/checkout with user-facing messaging when requested quantity exceeds available stock."
   ],
   "known_issues": [
     "Attempt to set the user's account as admin failed due to a build/deploy error ('AI was unable to complete your request').",
@@ -231,6 +232,30 @@
         "REQ-32"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-for-admin-inventory-management-fetch-stock-aware-products-and-update-stock-quantity-and-ensure-relevant-caches-are-invalidated-refetched-after-stock-updates",
+      "title": "Add React Query hooks for admin inventory management (fetch stock-aware products and update stock quantity), and ensure relevant caches are invalidated/refetched after stock updates.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-only-stock-option-section-within-the-existing-admin-experience-adminsellerpage-to-view-and-update-stock-quantities-per-product",
+      "title": "Add an admin-only \"Stock\" option/section within the existing /admin experience (AdminSellerPage) to view and update stock quantities per product.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-and-communicate-stock-limits-in-customer-facing-ui-flows-product-details-cart-and-checkout-when-the-user-attempts-to-exceed-available-stock-show-a-clear-english-message-indicating-the-current-in-stock-quantity",
+      "title": "Enforce and communicate stock limits in customer-facing UI flows (Product Details, Cart, and Checkout): when the user attempts to exceed available stock, show a clear English message indicating the current in-stock quantity.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -325,6 +350,50 @@
       "summary": "Extend the backend order lifecycle to support seller decisions by adding explicit order statuses for “accepted” and “declined”, and expose admin-only APIs to list all orders and to accept/decline an order.\n\nBackend changes must:\n- Update `OrderStatus` in `backend/main.mo` to include variants for accepted and declined.\n- Keep the existing `checkout(...)` behavior creating new orders with status `#pending`.\n- Add a query method that returns a list of all orders for admins only (seller/admin order inbox).\n- Add an admin-only update method that lets an admin change an order’s status from `pending` to either `accepted` or `declined`, with clear English error messages when the order does not exist, the caller is not an admin, or the transition is invalid.",
       "reqIds": [
         "REQ-29"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add admin-only stock/inventory management per product (set/update available quantity) via a dedicated Stock option in the admin area.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Enforce stock limits in cart/checkout: prevent customers from ordering more than available stock and show a clear message indicating the current in-stock quantity when they exceed it.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Extend the backend product model to support stock/inventory tracking per product, including storing an available stock quantity and exposing it in product reads.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Add admin-only backend APIs to manage inventory per product (set/update stock quantity) with clear authorization and error handling.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Enforce stock limits in the backend when customers add items to cart, update cart quantities, and place orders: prevent quantities from exceeding available stock and return a clear English message indicating the current in-stock quantity.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "If the project uses persisted/stable state for products across upgrades, add conditional migration support so existing products receive a sensible default stock quantity without breaking deployed canisters.",
+      "reqIds": [
+        "REQ-36"
       ],
       "status": "pending"
     }

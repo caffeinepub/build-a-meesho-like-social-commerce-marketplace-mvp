@@ -1,95 +1,158 @@
 {
   "kind": "build_request",
-  "title": "Add seller ability to accept or decline customer orders",
+  "title": "Add admin-only stock management and enforce inventory limits in cart/checkout",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-29",
-      "text": "Extend the backend order lifecycle to support seller decisions by adding explicit order statuses for “accepted” and “declined”, and expose admin-only APIs to list all orders and to accept/decline an order.\n\nBackend changes must:\n- Update `OrderStatus` in `backend/main.mo` to include variants for accepted and declined.\n- Keep the existing `checkout(...)` behavior creating new orders with status `#pending`.\n- Add a query method that returns a list of all orders for admins only (seller/admin order inbox).\n- Add an admin-only update method that lets an admin change an order’s status from `pending` to either `accepted` or `declined`, with clear English error messages when the order does not exist, the caller is not an admin, or the transition is invalid.",
+      "id": "REQ-33",
+      "text": "Extend the backend product model to support stock/inventory tracking per product, including storing an available stock quantity and exposing it in product reads.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-3"
         ],
         "quotes": [
-          "when a customer place  a order so there should be a option for the person who is seeling that he wants to accept or decline the order"
+          "i want to manage stock as well make a seperate stockoption only for admin so i can add no. of the product in stock"
         ]
       },
       "acceptanceCriteria": [
-        "Placing an order via the existing `checkout(...)` call creates an order with status `pending`.",
-        "A non-admin caller cannot list all orders and cannot accept/decline any order; calls fail with clear English errors.",
-        "An admin can list all orders and see newly placed orders in the results.",
-        "An admin can set a pending order to accepted or declined; invalid order IDs and invalid transitions return clear English errors.",
-        "Existing buyer-facing `getOrders()` continues to work and includes the updated status values for that buyer’s orders."
+        "Each Product has a persisted stock quantity value (integer) that represents available units.",
+        "Existing product read APIs (e.g., getProduct, getAllProductsSortedById, getProductsByCategory*) return the stock quantity so the frontend can display/enforce limits.",
+        "Stock quantity cannot be negative; backend rejects invalid values with a clear English error message."
       ]
     },
     {
-      "id": "REQ-30",
-      "text": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
-      "target": "frontend",
+      "id": "REQ-34",
+      "text": "Add admin-only backend APIs to manage inventory per product (set/update stock quantity) with clear authorization and error handling.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-3"
         ],
         "quotes": [
-          "there should be a option for the person who is seeling that he wants to accept or decline the order"
+          "make a seperate stockoption only for admin so i can add no. of the product in stock"
         ]
       },
       "acceptanceCriteria": [
-        "When an order is accepted/declined from the UI, the admin order list refreshes and shows the updated status without a manual page refresh.",
-        "The buyer’s “My Orders” view reflects the new status after data refetch (e.g., navigating back to /orders or refreshing triggers the updated status)."
+        "Only admins can update stock; non-admin callers receive a clear English unauthorized error.",
+        "Updating stock for a non-existent product returns a clear English error.",
+        "Updating stock succeeds and subsequent product fetches reflect the new stock quantity."
       ]
     },
     {
-      "id": "REQ-31",
-      "text": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
-      "target": "frontend",
+      "id": "REQ-35",
+      "text": "Enforce stock limits in the backend when customers add items to cart, update cart quantities, and place orders: prevent quantities from exceeding available stock and return a clear English message indicating the current in-stock quantity.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-3"
         ],
         "quotes": [
-          "option for the person who is seeling that he wants to accept or decline the order"
+          "if the quanity is exceeded by customer then it should show we have this much in stock at this moment"
         ]
       },
       "acceptanceCriteria": [
-        "An admin can navigate to /admin and find an Order Management section.",
-        "Pending orders show Accept and Decline buttons; non-pending orders do not show these action buttons.",
-        "Clicking Accept changes the order status to accepted and updates the UI.",
-        "Clicking Decline changes the order status to declined and updates the UI.",
-        "All user-facing text in this UI is in English."
+        "If a user attempts to set cart quantity above available stock, the backend rejects the request with a clear English error message that includes the available quantity (e.g., \"We have only X in stock at this moment.\").",
+        "Checkout validates that all cart item quantities are <= available stock at the moment of checkout; if not, checkout fails with a clear English error message that includes the available quantity (and identifies the relevant product).",
+        "On successful checkout, the backend reduces stock quantities for all purchased items accordingly (stock decremented by ordered quantity).",
+        "Stock cannot go below zero after checkout; the backend prevents this with validation."
       ]
     },
     {
-      "id": "REQ-32",
-      "text": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
-      "target": "frontend",
+      "id": "REQ-36",
+      "text": "If the project uses persisted/stable state for products across upgrades, add conditional migration support so existing products receive a sensible default stock quantity without breaking deployed canisters.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-3"
         ],
         "quotes": [
-          "accept or decline the order"
+          "i want to manage stock as well"
         ]
       },
       "acceptanceCriteria": [
-        "OrdersPage renders accepted and declined statuses without crashing and with appropriate badge styling.",
-        "A buyer can see when their order is accepted or declined in the “My Orders” list."
+        "Upgrading an existing canister does not trap due to missing stock fields.",
+        "Existing products after upgrade have a deterministic default stock quantity (documented in code), and admins can adjust it via the new stock APIs."
+      ]
+    },
+    {
+      "id": "REQ-37",
+      "text": "Add React Query hooks for admin inventory management (fetch stock-aware products and update stock quantity), and ensure relevant caches are invalidated/refetched after stock updates.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "make a seperate stockoption only for admin"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A mutation hook exists to update a product’s stock quantity via the new backend admin API.",
+        "After a successful stock update, product-related queries are invalidated/refetched so the UI updates immediately (e.g., ['products'], ['product', id]).",
+        "Errors from stock enforcement or authorization are shown to the admin as clear English messages."
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "text": "Add an admin-only \"Stock\" option/section within the existing /admin experience (AdminSellerPage) to view and update stock quantities per product.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "make a seperate stockoption only for admin so i can add no. of the product in stock"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Stock section is visible only when the current user is an admin (consistent with existing admin gating).",
+        "The Stock section lists products with at least: product title, product id, and current stock quantity.",
+        "Admins can set/update stock quantity for a product from this section (e.g., inline input + save button), with controls disabled during pending mutations.",
+        "After save, the UI shows clear English success/error feedback and reflects the updated stock quantity."
+      ]
+    },
+    {
+      "id": "REQ-39",
+      "text": "Enforce and communicate stock limits in customer-facing UI flows (Product Details, Cart, and Checkout): when the user attempts to exceed available stock, show a clear English message indicating the current in-stock quantity.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "if the quanity is exceeded by customer then it should show we have this much in stock at this moment"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On ProductDetailsPage, attempting to add a quantity that exceeds available stock results in a clear error toast/message that includes the available quantity (e.g., \"We have only X in stock at this moment.\").",
+        "On CartPage, attempting to increment quantity beyond available stock results in a clear error toast/message with the available quantity, and the UI does not end up showing a cart quantity greater than the stock.",
+        "On CheckoutPage, if checkout fails due to stock limits, the error is displayed in clear English and includes the available quantity (and the relevant product), and the order is not placed."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
-    "Do not edit any files under `frontend/src/components/ui` or other frontend immutable paths listed in SYSTEM_CONTEXT.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo.",
+    "Do not edit frontend files in immutablePaths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui (compose existing UI components instead).",
+    "All user-facing text introduced/modified for this change must be in English."
   ],
   "nonGoals": [
-    "Implementing multi-seller support or assigning orders to specific sellers beyond the existing admin model.",
-    "Adding real payment capture/refunds, notifications, email/SMS, or real-time updates.",
-    "Adding external databases or third-party services."
+    "Implementing warehouse locations, multiple stock sources, or product variants (size/color) inventory.",
+    "Implementing stock reservations/holds or real-time inventory synchronization beyond request-time validation.",
+    "Adding external database or third-party inventory integrations."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

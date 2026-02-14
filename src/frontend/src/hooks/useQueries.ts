@@ -43,6 +43,7 @@ export function useAddProduct() {
       price: number;
       category: string;
       imageUrl: string;
+      stock: bigint;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.addProduct(
@@ -50,7 +51,8 @@ export function useAddProduct() {
         data.description,
         data.price,
         data.category,
-        data.imageUrl
+        data.imageUrl,
+        data.stock
       );
     },
     onSuccess: () => {
@@ -72,6 +74,7 @@ export function useEditProduct() {
       price: number;
       category: string;
       imageUrl: string;
+      stock: bigint;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.editProduct(
@@ -80,7 +83,8 @@ export function useEditProduct() {
         data.description,
         data.price,
         data.category,
-        data.imageUrl
+        data.imageUrl,
+        data.stock
       );
     },
     onSuccess: () => {
@@ -101,6 +105,24 @@ export function useDeleteProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+// Stock Management
+export function useUpdateProductStock() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { productId: bigint; newStock: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateProductStock(data.productId, data.newStock);
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate all product-related queries to refresh stock everywhere
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product', variables.productId.toString()] });
     },
   });
 }
@@ -181,6 +203,7 @@ export function useCheckout() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -266,6 +289,7 @@ export function useInitializeMarketplace() {
           price: 2499,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(1),
@@ -274,6 +298,7 @@ export function useInitializeMarketplace() {
           price: 3999,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(2),
@@ -282,6 +307,7 @@ export function useInitializeMarketplace() {
           price: 799,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(3),
@@ -290,6 +316,7 @@ export function useInitializeMarketplace() {
           price: 15999,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(4),
@@ -298,6 +325,7 @@ export function useInitializeMarketplace() {
           price: 6499,
           category: 'Home & Kitchen',
           imageUrl: 'https://images.unsplash.com/photo-1585515320310-259814833e62?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(5),
@@ -306,6 +334,7 @@ export function useInitializeMarketplace() {
           price: 1999,
           category: 'Beauty',
           imageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(6),
@@ -314,6 +343,7 @@ export function useInitializeMarketplace() {
           price: 2799,
           category: 'Sports',
           imageUrl: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(7),
@@ -322,6 +352,7 @@ export function useInitializeMarketplace() {
           price: 3699,
           category: 'Fashion',
           imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(8),
@@ -330,6 +361,7 @@ export function useInitializeMarketplace() {
           price: 4799,
           category: 'Electronics',
           imageUrl: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(9),
@@ -338,6 +370,7 @@ export function useInitializeMarketplace() {
           price: 7299,
           category: 'Home & Kitchen',
           imageUrl: 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(10),
@@ -346,6 +379,7 @@ export function useInitializeMarketplace() {
           price: 1599,
           category: 'Beauty',
           imageUrl: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=400',
+          stock: BigInt(100),
         },
         {
           id: BigInt(11),
@@ -354,6 +388,7 @@ export function useInitializeMarketplace() {
           price: 5699,
           category: 'Sports',
           imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
+          stock: BigInt(100),
         },
       ];
 

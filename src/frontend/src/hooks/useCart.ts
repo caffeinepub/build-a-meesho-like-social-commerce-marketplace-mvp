@@ -69,7 +69,9 @@ export function useAddToCart() {
       return actor.addToCart(data.productId, data.quantity);
     },
     onSuccess: () => {
+      // Invalidate cart and products to refresh stock-aware UI
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -84,7 +86,9 @@ export function useUpdateCartQuantity() {
       return actor.addToCart(data.productId, data.quantity);
     },
     onSuccess: () => {
+      // Invalidate cart and products to refresh stock-aware UI
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -99,7 +103,9 @@ export function useRemoveFromCart() {
       return actor.addToCart(productId, BigInt(0));
     },
     onSuccess: () => {
+      // Invalidate cart and products to refresh stock-aware UI
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }

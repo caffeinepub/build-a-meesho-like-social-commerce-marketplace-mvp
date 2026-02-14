@@ -154,6 +154,7 @@ export default function CheckoutPage() {
       });
     } catch (error: any) {
       setIsProcessing(false);
+      // Display backend error message which includes stock information
       toast.error(error.message || 'Failed to place order');
     }
   };
@@ -232,124 +233,94 @@ export default function CheckoutPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name *</Label>
+                <div>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
                     value={addressData.fullName}
-                    onChange={(e) =>
-                      handleAddressChange('fullName', e.target.value)
-                    }
-                    placeholder="Enter your full name"
+                    onChange={(e) => handleAddressChange('fullName', e.target.value)}
+                    placeholder="John Doe"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mobile">Mobile Number *</Label>
+                <div>
+                  <Label htmlFor="mobile">Mobile Number</Label>
                   <Input
                     id="mobile"
-                    type="tel"
                     value={addressData.mobile}
-                    onChange={(e) =>
-                      handleAddressChange('mobile', e.target.value)
-                    }
+                    onChange={(e) => handleAddressChange('mobile', e.target.value)}
                     placeholder="10-digit mobile number"
-                    maxLength={10}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="addressLine1">Address Line 1 *</Label>
-                <Input
-                  id="addressLine1"
-                  value={addressData.addressLine1}
-                  onChange={(e) =>
-                    handleAddressChange('addressLine1', e.target.value)
-                  }
-                  placeholder="House No., Building Name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="addressLine2">Address Line 2</Label>
-                <Input
-                  id="addressLine2"
-                  value={addressData.addressLine2}
-                  onChange={(e) =>
-                    handleAddressChange('addressLine2', e.target.value)
-                  }
-                  placeholder="Road Name, Area, Colony (Optional)"
-                />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="landmark">Landmark</Label>
-                  <Input
-                    id="landmark"
-                    value={addressData.landmark}
-                    onChange={(e) =>
-                      handleAddressChange('landmark', e.target.value)
-                    }
-                    placeholder="Nearby landmark (Optional)"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pincode">Pincode *</Label>
+                <div>
+                  <Label htmlFor="pincode">Pincode</Label>
                   <Input
                     id="pincode"
-                    type="text"
                     value={addressData.pincode}
-                    onChange={(e) =>
-                      handleAddressChange('pincode', e.target.value)
-                    }
+                    onChange={(e) => handleAddressChange('pincode', e.target.value)}
                     placeholder="6-digit pincode"
                     maxLength={6}
                   />
                 </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City *</Label>
+                <div>
+                  <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
                     value={addressData.city}
-                    onChange={(e) =>
-                      handleAddressChange('city', e.target.value)
-                    }
-                    placeholder="Enter your city"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    value={addressData.state}
-                    onChange={(e) =>
-                      handleAddressChange('state', e.target.value)
-                    }
-                    placeholder="Enter your state"
+                    onChange={(e) => handleAddressChange('city', e.target.value)}
+                    placeholder="City"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate({ to: '/cart' })}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Cart
+              <div>
+                <Label htmlFor="addressLine1">Address Line 1</Label>
+                <Input
+                  id="addressLine1"
+                  value={addressData.addressLine1}
+                  onChange={(e) => handleAddressChange('addressLine1', e.target.value)}
+                  placeholder="House No., Building Name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="addressLine2">Address Line 2 (Optional)</Label>
+                <Input
+                  id="addressLine2"
+                  value={addressData.addressLine2}
+                  onChange={(e) => handleAddressChange('addressLine2', e.target.value)}
+                  placeholder="Road Name, Area, Colony"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="landmark">Landmark (Optional)</Label>
+                <Input
+                  id="landmark"
+                  value={addressData.landmark}
+                  onChange={(e) => handleAddressChange('landmark', e.target.value)}
+                  placeholder="Near..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input
+                  id="state"
+                  value={addressData.state}
+                  onChange={(e) => handleAddressChange('state', e.target.value)}
+                  placeholder="State"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleSaveAddress} variant="default">
+                  Save Address
                 </Button>
-                {!addressSaved && (
-                  <Button onClick={handleSaveAddress} className="flex-1">
-                    Save Address
-                  </Button>
-                )}
                 {addressSaved && (
-                  <Button onClick={handleContinueToReview} className="flex-1">
+                  <Button onClick={handleContinueToReview} variant="default">
                     Continue to Review
                   </Button>
                 )}
@@ -358,7 +329,7 @@ export default function CheckoutPage() {
           </Card>
         )}
 
-        {/* Step 2: Review */}
+        {/* Step 2: Review Order */}
         {step === 2 && (
           <div className="space-y-6">
             <Card>
@@ -388,50 +359,33 @@ export default function CheckoutPage() {
                     <img
                       src={item.product.imageUrl}
                       alt={item.product.title}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-20 h-20 object-cover rounded"
                     />
                     <div className="flex-1">
-                      <h4 className="font-semibold">{item.product.title}</h4>
+                      <h3 className="font-semibold">{item.product.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Qty: {item.quantity.toString()}
+                        Quantity: {item.quantity.toString()}
                       </p>
-                      <p className="text-sm font-medium">
-                        {formatINR(item.product.price)} ×{' '}
-                        {item.quantity.toString()} ={' '}
-                        {formatINR(item.product.price * Number(item.quantity))}
+                      <p className="font-bold text-primary">
+                        {formatINR(item.product.price)}
                       </p>
                     </div>
                   </div>
                 ))}
                 <Separator />
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-semibold">{formatINR(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipping</span>
-                    <span className="font-semibold text-primary">FREE</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span className="text-primary">{formatINR(subtotal)}</span>
-                  </div>
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span className="text-primary">{formatINR(subtotal)}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setStep(1)}
-                className="flex-1"
-              >
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep(1)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
-              <Button onClick={handleContinueToPayment} className="flex-1">
+              <Button onClick={handleContinueToPayment}>
                 Continue to Payment
               </Button>
             </div>
@@ -441,27 +395,18 @@ export default function CheckoutPage() {
         {/* Step 3: Payment */}
         {step === 3 && (
           <div className="space-y-6">
-            <DemoPaymentSection
-              paymentMethod={paymentMethod}
-              onPaymentMethodChange={setPaymentMethod}
-              onValidationChange={setIsPaymentValid}
-            />
-
-            {isProcessing && (
-              <Card className="bg-primary/5 border-primary">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <p className="font-medium text-primary">
-                      Processing payment...
-                    </p>
-                  </div>
-                  <p className="text-sm text-muted-foreground text-center mt-2">
-                    Please wait while we process your order
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Method</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DemoPaymentSection
+                  paymentMethod={paymentMethod}
+                  onPaymentMethodChange={setPaymentMethod}
+                  onValidationChange={setIsPaymentValid}
+                />
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -469,36 +414,30 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Items Total</span>
-                  <span className="font-semibold">{formatINR(subtotal)}</span>
+                  <span>Subtotal</span>
+                  <span>{formatINR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipping</span>
-                  <span className="font-semibold text-primary">FREE</span>
+                  <span>Shipping</span>
+                  <span className="text-primary">FREE</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
-                  <span>Amount Payable</span>
+                  <span>Total</span>
                   <span className="text-primary">{formatINR(subtotal)}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setStep(2)}
-                disabled={isProcessing}
-                className="flex-1"
-              >
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep(2)} disabled={isProcessing}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
               <Button
                 onClick={handlePlaceOrder}
-                disabled={!paymentMethod || !isPaymentValid || isProcessing}
+                disabled={!isPaymentValid || isProcessing}
                 className="flex-1"
-                size="lg"
               >
                 {isProcessing ? (
                   <>
@@ -506,7 +445,7 @@ export default function CheckoutPage() {
                     Processing...
                   </>
                 ) : (
-                  'Pay & Place Order'
+                  'Place Order'
                 )}
               </Button>
             </div>

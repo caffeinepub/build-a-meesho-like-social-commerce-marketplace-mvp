@@ -1,58 +1,74 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Seller/admin order accept/decline UI and hooks",
+  "title": "Admin stock management UI and stock-limit enforcement in cart/checkout",
   "requirements": [
     {
-      "id": "REQ-30",
-      "summary": "Add React Query hooks for admin order listing and accept/decline actions with cache refresh.",
+      "id": "REQ-37",
+      "summary": "Add React Query hooks for stock-aware product reads and admin stock updates with cache invalidation and clear error propagation.",
       "acceptanceCriteria": [
-        "When an order is accepted/declined from the UI, the admin order list refreshes and shows the updated status without a manual page refresh.",
-        "The buyer’s “My Orders” view reflects the new status after data refetch (e.g., navigating back to /orders or refreshing triggers the updated status)."
+        "A mutation hook exists to update a product’s stock quantity via the new backend admin API.",
+        "After a successful stock update, product-related queries are invalidated/refetched so the UI updates immediately (e.g., ['products'], ['product', id]).",
+        "Errors from stock enforcement or authorization are shown to the admin as clear English messages."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add seller/admin order management hooks: a query hook to fetch all orders (use a dedicated query key like ['adminOrders']) and mutation hook(s) that call the backend function to update an order status to accepted/declined. Ensure onSuccess invalidates/refetches both the admin orders query and the buyer orders query key ['orders'] when applicable. Use the authorization component’s role-based access control indirectly (admin-only backend checks + UI gating elsewhere); verify the component's usage instructions before implementing."
+          "description": "Add inventory-focused hooks: (1) a query helper for stock-aware products (reuse existing product queries that return Product.stock) and (2) an admin mutation hook that calls updateProductStock(productId, newStock) and invalidates product-related caches (e.g., ['products'], ['products', category], ['product', id]). Ensure thrown errors are preserved so UIs can show clear English messages. Use the authorization component’s role-based access patterns already present in the app to surface/handle unauthorized errors; verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-31",
-      "summary": "Add an admin-only Order Management section in /admin to review pending orders and accept/decline them with feedback and submission locking.",
+      "id": "REQ-38",
+      "summary": "Add an admin-only Stock section within AdminSellerPage to list products and update stock quantities with pending-state controls and feedback.",
       "acceptanceCriteria": [
-        "An admin can navigate to /admin and find an Order Management section.",
-        "Pending orders show Accept and Decline buttons; non-pending orders do not show these action buttons.",
-        "Clicking Accept changes the order status to accepted and updates the UI.",
-        "Clicking Decline changes the order status to declined and updates the UI.",
-        "All user-facing text in this UI is in English."
+        "The Stock section is visible only when the current user is an admin (consistent with existing admin gating).",
+        "The Stock section lists products with at least: product title, product id, and current stock quantity.",
+        "Admins can set/update stock quantity for a product from this section (e.g., inline input + save button), with controls disabled during pending mutations.",
+        "After save, the UI shows clear English success/error feedback and reflects the updated stock quantity."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminSellerPage.tsx",
           "operation": "modify",
-          "description": "Within the existing admin experience, add an \"Order Management\" section that is only rendered for admins. Use the new hooks to load all orders and render a table/list with: order ID, a safe buyer identifier (avoid full principal; use a truncated principal string or profile name if already available), item count, total formatted via formatINR, delivery address summary (first line) when present, and current status. For pending orders only, render Accept and Decline actions wired to the mutation hooks; disable buttons while a mutation is pending to prevent duplicate submissions; show clear English success/error feedback (e.g., using existing toast flow). Use the authorization component (role-based access control) via existing admin gating in this page (useCurrentUser/isAdmin) to ensure visibility is admin-only; verify the component's usage instructions before implementing."
+          "description": "Extend the existing admin dashboard Tabs to include a new admin-only \"Stock\" tab/section. In this section, render a table/list of products (id, title, current stock) and provide an inline numeric input and Save button per product to call the new update-stock mutation hook. Disable per-row controls while the mutation is pending and show clear English toast success/error feedback. Ensure admin gating remains consistent with current admin checks (useCurrentUser/isAdmin) provided by the authorization component patterns; verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useCurrentUser.ts",
-          "operation": "modify",
-          "description": "If needed for a smoother admin-only experience, extend current user state to expose any additional admin-check status (e.g., explicit loading/error) used to guard the new Order Management section. Continue using the authorization component’s role-based access control through isCallerAdmin; verify the component's usage instructions before implementing."
+          "path": "frontend/src/components/admin/AdminStockManagementSection.tsx",
+          "operation": "create",
+          "description": "Create a reusable admin-only stock management UI component used by AdminSellerPage. It should accept the products list and wire up the update-stock mutation hook, including optimistic/pending UI state, basic validation (non-negative integer client-side), and clear English feedback. Compose existing shadcn-ui components (Table, Input, Button, Card/Alert) rather than editing ui primitives; verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-32",
-      "summary": "Update buyer order status badge styling and labels to support accepted/declined consistently.",
+      "id": "REQ-39",
+      "summary": "Enforce and communicate stock limits across Product Details, Cart, and Checkout UIs using stock values and backend error messages.",
       "acceptanceCriteria": [
-        "OrdersPage renders accepted and declined statuses without crashing and with appropriate badge styling.",
-        "A buyer can see when their order is accepted or declined in the “My Orders” list."
+        "On ProductDetailsPage, attempting to add a quantity that exceeds available stock results in a clear error toast/message that includes the available quantity (e.g., \"We have only X in stock at this moment.\").",
+        "On CartPage, attempting to increment quantity beyond available stock results in a clear error toast/message with the available quantity, and the UI does not end up showing a cart quantity greater than the stock.",
+        "On CheckoutPage, if checkout fails due to stock limits, the error is displayed in clear English and includes the available quantity (and the relevant product), and the order is not placed."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/OrdersPage.tsx",
+          "path": "frontend/src/pages/ProductDetailsPage.tsx",
           "operation": "modify",
-          "description": "Update status badge variant mapping to include the new statuses: accepted and declined. Ensure the displayed label remains clear and consistent (e.g., 'accepted', 'declined') and that any other existing statuses still render safely with a default variant."
+          "description": "Use Product.stock to prevent selecting a quantity above available stock. Clamp the quantity increment action at stock and show a clear English toast when the user attempts to exceed it (include the available quantity). Also, before calling add-to-cart, validate quantity <= stock and show the same message if invalid. Keep handling backend errors (including stock enforcement) by displaying the backend’s clear English message. Compose existing UI components; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CartPage.tsx",
+          "operation": "modify",
+          "description": "Prevent cart quantity increments beyond item.product.stock. When user clicks + and quantity is already at stock, show a clear English toast that includes the available quantity and do not call the update mutation. Ensure the UI never renders a quantity greater than stock (e.g., if backend rejects, keep displayed quantity unchanged and show the backend error message). Compose existing UI components; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/CheckoutPage.tsx",
+          "operation": "modify",
+          "description": "On checkout failure due to stock limits, display the backend-provided clear English error (which should include available quantity and relevant product). Ensure the order is not placed and the user remains on checkout with the error visible via toast. Compose existing UI components; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useCart.ts",
+          "operation": "modify",
+          "description": "Ensure cart-related mutations propagate backend stock-limit errors cleanly to callers (so pages can show clear English messages). Where appropriate, invalidate/refetch both cart and relevant product queries after cart updates to keep stock-aware UI consistent. Compose existing hooks and React Query patterns; verify the component's usage instructions before implementing."
         }
       ]
     }

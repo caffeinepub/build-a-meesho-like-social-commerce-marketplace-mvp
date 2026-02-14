@@ -1,36 +1,74 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T03:36:51.745Z",
-  "summary": "Diff implements new accepted/declined order statuses, adds frontend admin order management hooks and UI, and updates buyer OrdersPage to display new statuses. Backend API additions for admin listing and status updates are not visible in the provided backend diff snippet, so their implementation cannot be confirmed from the evidence shown. A new backend migration module was added, which was not explicitly requested.",
+  "generatedAt": "2026-02-14T03:48:56.662Z",
+  "summary": "Diff adds a new `stock` field to the backend `Product` type and introduces a migration that defaults existing products to stock=100. Frontend adds an admin stock management section and React Query mutation for updating stock, plus client-side stock-limit checks on Product Details and Cart. However, the diff summary does not provide explicit evidence that the backend implements the required admin-only stock update API, non-negative stock validation/error messaging, or the required server-side stock enforcement and stock decrement on checkout; Checkout UI handling for backend stock-limit failures is also not evidenced in the provided truncation.",
   "missing_requirements": [
     {
-      "id": "REQ-29",
-      "requirement": "Add an admin-only query API to list all orders and an admin-only update API to transition an order from pending to accepted/declined with clear English errors for: order not found, caller not admin, invalid transition.",
-      "reason": "OrderStatus variants were added, but the diff excerpt for backend/main.mo is truncated and does not show any new getAllOrders/updateOrderStatus methods, nor the required authorization and transition validation/error messages.",
+      "id": "REQ-33",
+      "requirement": "Backend must reject negative stock values with a clear English error message, and product read APIs must return stock.",
+      "reason": "While `Product` now includes `stock`, the diff summary does not show validation that prevents negative stock (e.g., in add/edit/update stock paths) nor does it explicitly show the product read API implementations returning the new field.",
       "evidence": [
-        "backend/main.mo (truncated)"
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-34",
+      "requirement": "Add admin-only backend APIs to set/update stock quantity with clear authorization and error handling (unauthorized, product not found).",
+      "reason": "Frontend calls `actor.updateProductStock(...)`, but the backend diff snippet does not show an `updateProductStock` method nor its admin authorization checks and error messages.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-35",
+      "requirement": "Enforce stock limits in backend for add-to-cart, cart quantity updates, and checkout; include available quantity in clear English errors; decrement stock on successful checkout; prevent stock going below zero.",
+      "reason": "Frontend includes client-side checks and comments that backend will enforce, but the diff summary does not show backend logic in `addToCart`/cart update or checkout/order placement to validate against stock, return the required messages, or decrement stock atomically on successful checkout.",
+      "evidence": [
+        "frontend/src/pages/ProductDetailsPage.tsx",
+        "frontend/src/pages/CartPage.tsx",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-39",
+      "requirement": "Checkout UI must display backend stock-limit failure with clear English message including available quantity and relevant product, and the order is not placed.",
+      "reason": "CheckoutPage is truncated and shows general flow/toasts, but the diff summary does not provide explicit evidence of handling/displaying stock-limit failures from checkout that identify the product and available quantity.",
+      "evidence": [
+        "frontend/src/pages/CheckoutPage.tsx"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added a backend data migration module (migration.mo) to map old order status types to a new type that includes accepted/declined.",
-      "reason": "The BuildRequest did not request any explicit migration system or a separate migration module; it only required extending statuses and adding admin APIs within the single Motoko actor.",
+      "description": "Default stock value of 100 for all migrated existing products.",
+      "reason": "A deterministic default is required, but the specific value (100) is an implementation choice not explicitly requested by the BuildRequest.",
       "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo (with migration = Migration.run)"
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "Requiring stock as an explicit parameter in product add/edit hooks (and likely product creation/edit UI).",
+      "reason": "BuildRequest focuses on stock tracking and admin stock management; forcing stock into add/edit product flows is not explicitly requested (though it may be consistent with adding stock to the product model).",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts",
+        "backend/main.mo"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.56,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/components/admin/AdminStockManagementSection.tsx",
+    "frontend/src/hooks/useCart.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/AdminSellerPage.tsx",
-    "frontend/src/pages/OrdersPage.tsx",
+    "frontend/src/pages/CartPage.tsx",
+    "frontend/src/pages/CheckoutPage.tsx",
+    "frontend/src/pages/ProductDetailsPage.tsx",
     "project_state.json"
   ]
 }

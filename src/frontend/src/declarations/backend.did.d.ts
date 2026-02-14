@@ -31,6 +31,7 @@ export interface Product {
   'id' : bigint,
   'title' : string,
   'description' : string,
+  'stock' : bigint,
   'imageUrl' : string,
   'category' : string,
   'price' : number,
@@ -41,7 +42,10 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addProduct' : ActorMethod<[string, string, number, string, string], bigint>,
+  'addProduct' : ActorMethod<
+    [string, string, number, string, string, bigint],
+    bigint
+  >,
   'addToCart' : ActorMethod<[bigint, bigint], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bootstrapAdmin' : ActorMethod<[string, string], undefined>,
@@ -57,7 +61,7 @@ export interface _SERVICE {
   >,
   'deleteProduct' : ActorMethod<[bigint], undefined>,
   'editProduct' : ActorMethod<
-    [bigint, string, string, number, string, string],
+    [bigint, string, string, number, string, string, bigint],
     undefined
   >,
   'getAllCategories' : ActorMethod<[], Array<Category>>,
@@ -68,12 +72,14 @@ export interface _SERVICE {
   'getCart' : ActorMethod<[], Array<CartItem>>,
   'getOrders' : ActorMethod<[], Array<Order>>,
   'getProduct' : ActorMethod<[bigint], Product>,
+  'getProductStock' : ActorMethod<[bigint], bigint>,
   'getProductsByCategory' : ActorMethod<[string], Array<Product>>,
   'getProductsByCategorySortedByPrice' : ActorMethod<[string], Array<Product>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateOrderStatus' : ActorMethod<[bigint, OrderStatus], undefined>,
+  'updateProductStock' : ActorMethod<[bigint, bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

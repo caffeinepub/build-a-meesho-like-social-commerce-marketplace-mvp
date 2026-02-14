@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-react-query-hooks-for-seller-admin-order-management-that-integrate-with-the-new-backend-apis-frontend-changes-must-add-a-query-hook-to-fetch-all-orders-for-the-current-authenticated-admin-add-mutation-hook-s-to-accept-an-order-and-to-decline-an-order-or-a-single-mutation-that-updates-status-ensure-relevant-caches-are-refreshed-after-mutations-e-g-invalidate-refetch-both-the-admin-orders-list-and-the-buyer-orders-query-key-orders-when-applicable",
-      "featureTitle": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
+      "featureId": "feature-add-react-query-hooks-for-admin-inventory-management-fetch-stock-aware-products-and-update-stock-quantity-and-ensure-relevant-caches-are-invalidated-refetched-after-stock-updates",
+      "featureTitle": "Add React Query hooks for admin inventory management (fetch stock-aware products and update stock quantity), and ensure relevant caches are invalidated/refetched after stock updates.",
       "files": [
         "frontend/src/hooks/useQueries.ts"
       ],
@@ -16,14 +16,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-30"
+        "REQ-37"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-a-seller-admin-order-review-ui-that-allows-accepting-or-declining-newly-placed-orders-frontend-changes-must-add-an-order-management-section-within-the-existing-admin-experience-adminsellerpage-that-is-visible-only-to-admins-display-a-list-of-orders-with-key-details-order-id-buyer-principal-or-a-safe-identifier-item-count-total-inr-formatting-delivery-address-summary-if-present-current-status-for-orders-in-pending-status-show-accept-and-decline-actions-after-an-action-completes-show-clear-english-success-error-feedback-and-disable-prevent-duplicate-submissions-while-the-mutation-is-pending",
-      "featureTitle": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
+      "featureId": "feature-add-an-admin-only-stock-option-section-within-the-existing-admin-experience-adminsellerpage-to-view-and-update-stock-quantities-per-product",
+      "featureTitle": "Add an admin-only \"Stock\" option/section within the existing /admin experience (AdminSellerPage) to view and update stock quantities per product.",
       "files": [
+        "frontend/src/components/admin/AdminStockManagementSection.tsx",
         "frontend/src/pages/AdminSellerPage.tsx"
       ],
       "components": [
@@ -35,15 +36,18 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-31"
+        "REQ-38"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-buyer-facing-order-status-display-to-handle-the-new-accepted-declined-statuses-consistently-frontend-changes-must-update-orders-orderspage-status-badge-styling-variants-to-include-the-new-statuses-ensure-the-status-label-shown-to-the-user-is-clear-and-consistent-e-g-accepted-declined",
-      "featureTitle": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
+      "featureId": "feature-enforce-and-communicate-stock-limits-in-customer-facing-ui-flows-product-details-cart-and-checkout-when-the-user-attempts-to-exceed-available-stock-show-a-clear-english-message-indicating-the-current-in-stock-quantity",
+      "featureTitle": "Enforce and communicate stock limits in customer-facing UI flows (Product Details, Cart, and Checkout): when the user attempts to exceed available stock, show a clear English message indicating the current in-stock quantity.",
       "files": [
-        "frontend/src/pages/OrdersPage.tsx"
+        "frontend/src/hooks/useCart.ts",
+        "frontend/src/pages/CartPage.tsx",
+        "frontend/src/pages/CheckoutPage.tsx",
+        "frontend/src/pages/ProductDetailsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -54,7 +58,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-32"
+        "REQ-39"
       ],
       "confidence": "high"
     }

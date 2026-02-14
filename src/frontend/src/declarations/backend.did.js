@@ -18,6 +18,7 @@ export const Product = IDL.Record({
   'id' : IDL.Int,
   'title' : IDL.Text,
   'description' : IDL.Text,
+  'stock' : IDL.Int,
   'imageUrl' : IDL.Text,
   'category' : IDL.Text,
   'price' : IDL.Float64,
@@ -48,7 +49,7 @@ export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addProduct' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Int],
       [IDL.Int],
       [],
     ),
@@ -69,7 +70,7 @@ export const idlService = IDL.Service({
     ),
   'deleteProduct' : IDL.Func([IDL.Int], [], []),
   'editProduct' : IDL.Func(
-      [IDL.Int, IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+      [IDL.Int, IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Int],
       [],
       [],
     ),
@@ -81,6 +82,7 @@ export const idlService = IDL.Service({
   'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
   'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getProduct' : IDL.Func([IDL.Int], [Product], ['query']),
+  'getProductStock' : IDL.Func([IDL.Int], [IDL.Int], ['query']),
   'getProductsByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
   'getProductsByCategorySortedByPrice' : IDL.Func(
       [IDL.Text],
@@ -95,6 +97,7 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateOrderStatus' : IDL.Func([IDL.Int, OrderStatus], [], []),
+  'updateProductStock' : IDL.Func([IDL.Int, IDL.Int], [], []),
 });
 
 export const idlInitArgs = [];
@@ -110,6 +113,7 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Int,
     'title' : IDL.Text,
     'description' : IDL.Text,
+    'stock' : IDL.Int,
     'imageUrl' : IDL.Text,
     'category' : IDL.Text,
     'price' : IDL.Float64,
@@ -137,7 +141,7 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addProduct' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Int],
         [IDL.Int],
         [],
       ),
@@ -158,7 +162,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'deleteProduct' : IDL.Func([IDL.Int], [], []),
     'editProduct' : IDL.Func(
-        [IDL.Int, IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text],
+        [IDL.Int, IDL.Text, IDL.Text, IDL.Float64, IDL.Text, IDL.Text, IDL.Int],
         [],
         [],
       ),
@@ -170,6 +174,7 @@ export const idlFactory = ({ IDL }) => {
     'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
     'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getProduct' : IDL.Func([IDL.Int], [Product], ['query']),
+    'getProductStock' : IDL.Func([IDL.Int], [IDL.Int], ['query']),
     'getProductsByCategory' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(Product)],
@@ -188,6 +193,7 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateOrderStatus' : IDL.Func([IDL.Int, OrderStatus], [], []),
+    'updateProductStock' : IDL.Func([IDL.Int, IDL.Int], [], []),
   });
 };
 

@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Minus, Plus, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { formatINR } from '@/utils/currency';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ProductDetailsPage() {
   const { productId } = useParams({ from: '/product/$productId' });
@@ -26,6 +27,14 @@ export default function ProductDetailsPage() {
       return;
     }
 
+    if (!product) return;
+
+    // Client-side validation: check if quantity exceeds stock
+    if (quantity > Number(product.stock)) {
+      toast.error(`We have only ${product.stock} in stock at this moment.`);
+      return;
+    }
+
     try {
       await addToCart.mutateAsync({
         productId: BigInt(productId),
@@ -33,8 +42,20 @@ export default function ProductDetailsPage() {
       });
       toast.success('Added to cart!');
     } catch (error: any) {
+      // Backend will also enforce stock limits and return clear error messages
       toast.error(error.message || 'Failed to add to cart');
     }
+  };
+
+  const handleIncrement = () => {
+    if (!product) return;
+    
+    const newQuantity = quantity + 1;
+    if (newQuantity > Number(product.stock)) {
+      toast.error(`We have only ${product.stock} in stock at this moment.`);
+      return;
+    }
+    setQuantity(newQuantity);
   };
 
   if (isLoading) {
@@ -63,6 +84,10 @@ export default function ProductDetailsPage() {
       </div>
     );
   }
+
+  const stockLevel = Number(product.stock);
+  const isOutOfStock = stockLevel === 0;
+  const isLowStock = stockLevel > 0 && stockLevel < 10;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -97,6 +122,25 @@ export default function ProductDetailsPage() {
             </p>
           </div>
 
+          {/* Stock Status Alert */}
+          {isOutOfStock && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This product is currently out of stock.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isLowStock && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Only {stockLevel} left in stock!
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card>
             <CardContent className="p-6">
               <h2 className="font-semibold mb-2">Description</h2>
@@ -112,7 +156,7 @@ export default function ProductDetailsPage() {
                   variant="outline"
                   size="icon"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
+                  disabled={quantity <= 1 || isOutOfStock}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -120,7 +164,8 @@ export default function ProductDetailsPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={handleIncrement}
+                  disabled={isOutOfStock}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -131,10 +176,14 @@ export default function ProductDetailsPage() {
               size="lg"
               className="w-full"
               onClick={handleAddToCart}
-              disabled={addToCart.isPending}
+              disabled={addToCart.isPending || isOutOfStock}
             >
               <ShoppingCart className="h-5 w-5 mr-2" />
-              {addToCart.isPending ? 'Adding...' : 'Add to Cart'}
+              {isOutOfStock
+                ? 'Out of Stock'
+                : addToCart.isPending
+                ? 'Adding...'
+                : 'Add to Cart'}
             </Button>
           </div>
         </div>

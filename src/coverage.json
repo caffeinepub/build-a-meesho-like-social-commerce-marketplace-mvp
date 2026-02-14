@@ -1,25 +1,46 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T03:36:51.748Z",
+  "generatedAt": "2026-02-14T03:48:56.666Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 7,
     "implemented": 3,
     "items": [
       {
-        "id": "REQ-29",
-        "summary": "Extend the backend order lifecycle to support seller decisions by adding explicit order statuses for “accepted” and “declined”, and expose admin-only APIs to list all orders and to accept/decline an order.\n\nBackend changes must:\n- Update `OrderStatus` in `backend/main.mo` to include variants for accepted and declined.\n- Keep the existing `checkout(...)` behavior creating new orders with status `#pending`.\n- Add a query method that returns a list of all orders for admins only (seller/admin order inbox).\n- Add an admin-only update method that lets an admin change an order’s status from `pending` to either `accepted` or `declined`, with clear English error messages when the order does not exist, the caller is not an admin, or the transition is invalid.",
+        "id": "REQ-33",
+        "summary": "Extend the backend product model to support stock/inventory tracking per product, including storing an available stock quantity and exposing it in product reads.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-30",
-        "summary": "Add React Query hooks for seller/admin order management that integrate with the new backend APIs.\n\nFrontend changes must:\n- Add a query hook to fetch all orders for the current authenticated admin.\n- Add mutation hook(s) to accept an order and to decline an order (or a single mutation that updates status).\n- Ensure relevant caches are refreshed after mutations (e.g., invalidate/refetch both the admin orders list and the buyer orders query key `['orders']` when applicable).",
+        "id": "REQ-34",
+        "summary": "Add admin-only backend APIs to manage inventory per product (set/update stock quantity) with clear authorization and error handling.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-35",
+        "summary": "Enforce stock limits in the backend when customers add items to cart, update cart quantities, and place orders: prevent quantities from exceeding available stock and return a clear English message indicating the current in-stock quantity.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-36",
+        "summary": "If the project uses persisted/stable state for products across upgrades, add conditional migration support so existing products receive a sensible default stock quantity without breaking deployed canisters.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-37",
+        "summary": "Add React Query hooks for admin inventory management (fetch stock-aware products and update stock quantity), and ensure relevant caches are invalidated/refetched after stock updates.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/hooks/useQueries.ts"
@@ -29,26 +50,33 @@
         ]
       },
       {
-        "id": "REQ-31",
-        "summary": "Add a seller/admin order review UI that allows accepting or declining newly placed orders.\n\nFrontend changes must:\n- Add an “Order Management” section within the existing `/admin` experience (AdminSellerPage) that is visible only to admins.\n- Display a list of orders with key details: order ID, buyer principal (or a safe identifier), item count, total (INR formatting), delivery address summary if present, current status.\n- For orders in `pending` status, show “Accept” and “Decline” actions.\n- After an action completes, show clear English success/error feedback and disable/prevent duplicate submissions while the mutation is pending.",
+        "id": "REQ-38",
+        "summary": "Add an admin-only \"Stock\" option/section within the existing /admin experience (AdminSellerPage) to view and update stock quantities per product.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/AdminSellerPage.tsx",
-          "frontend/src/hooks/useCurrentUser.ts"
+          "frontend/src/components/admin/AdminStockManagementSection.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminSellerPage.tsx"
+          "frontend/src/pages/AdminSellerPage.tsx",
+          "frontend/src/components/admin/AdminStockManagementSection.tsx"
         ]
       },
       {
-        "id": "REQ-32",
-        "summary": "Update buyer-facing order status display to handle the new accepted/declined statuses consistently.\n\nFrontend changes must:\n- Update `/orders` (OrdersPage) status badge styling/variants to include the new statuses.\n- Ensure the status label shown to the user is clear and consistent (e.g., “accepted”, “declined”).",
+        "id": "REQ-39",
+        "summary": "Enforce and communicate stock limits in customer-facing UI flows (Product Details, Cart, and Checkout): when the user attempts to exceed available stock, show a clear English message indicating the current in-stock quantity.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/OrdersPage.tsx"
+          "frontend/src/pages/ProductDetailsPage.tsx",
+          "frontend/src/pages/CartPage.tsx",
+          "frontend/src/pages/CheckoutPage.tsx",
+          "frontend/src/hooks/useCart.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/OrdersPage.tsx"
+          "frontend/src/pages/ProductDetailsPage.tsx",
+          "frontend/src/pages/CartPage.tsx",
+          "frontend/src/pages/CheckoutPage.tsx",
+          "frontend/src/hooks/useCart.ts"
         ]
       }
     ]
@@ -62,11 +90,15 @@
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/admin/AdminStockManagementSection.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useCart.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/AdminSellerPage.tsx",
-    "frontend/src/pages/OrdersPage.tsx",
+    "frontend/src/pages/CartPage.tsx",
+    "frontend/src/pages/CheckoutPage.tsx",
+    "frontend/src/pages/ProductDetailsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
